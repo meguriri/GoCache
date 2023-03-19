@@ -1,0 +1,6 @@
+
+#最大内存空间
+max-bytes: 1000000
+
+#使用的淘汰策略
+replacement-policy: LFU
