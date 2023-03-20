@@ -42,7 +42,6 @@ func (c *lfuCache) AddToNewFreqList(lfuEntry *data.LfuEntry, used int) *list.Ele
 	}
 	return newList.PushBack(lfuEntry)
 }
-
 func (c *lfuCache) RemoveFreqList(element *list.Element) *data.LfuEntry {
 	kv := element.Value.(*data.LfuEntry)
 	oldList := c.freqMap[kv.Used]
@@ -54,18 +53,20 @@ func (c *lfuCache) RemoveFreqList(element *list.Element) *data.LfuEntry {
 		delete(c.freqMap, kv.Used)
 	}
 	kv.Used++
-	lfuEntry := &data.LfuEntry{
-		Key:   kv.Key,
-		Value: kv.Value,
-		Used:  kv.Used,
-	}
-	c.AddToNewFreqList(lfuEntry, kv.Used)
+	// lfuEntry := &data.LfuEntry{
+	// 	Key:   kv.Key,
+	// 	Value: kv.Value,
+	// 	Used:  kv.Used,
+	// }
+	//c.AddToNewFreqList(lfuEntry, kv.Used)
 	return kv
 }
 
 func (c *lfuCache) Get(key string) (data.Value, bool) {
-	if element, ok := c.cacheMap[key]; ok {
+	if element, ok := c.cacheMap[key]; ok { //根据cacheMap 找到*element
 		kv := c.RemoveFreqList(element)
+		newElement := c.AddToNewFreqList(kv, kv.Used)
+		c.cacheMap[key] = newElement
 		return kv.Value, true
 	}
 	return nil, false
@@ -88,8 +89,10 @@ func (c *lfuCache) RemoveOldest() {
 }
 
 func (c *lfuCache) Add(key string, value data.Value) {
-	if element, ok := c.cacheMap[key]; ok { //节点存在，更新
+	if element, ok := c.cacheMap[key]; ok { //节点存在，更新  从cacheMap获取*element
 		kv := c.RemoveFreqList(element)
+		newElement := c.AddToNewFreqList(kv, kv.Used)
+		c.cacheMap[key] = newElement
 		c.nBytes = c.nBytes - int64(kv.Value.Len()) + int64(value.Len())
 		kv.Value = value
 	} else { //节点不存在，添加
@@ -110,6 +113,7 @@ func (c *lfuCache) Add(key string, value data.Value) {
 }
 
 func (c *lfuCache) GetAll() {
+	fmt.Println("MaxBytes: ", c.maxBytes, ";nowUsedBytes: ", c.nBytes, ";minFreq: ", c.minFreq)
 	fmt.Printf("{\n")
 	for i, list := range c.freqMap {
 		fmt.Printf("%d: [", i)

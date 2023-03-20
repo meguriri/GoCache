@@ -48,4 +48,10 @@ func main() {
 
 	cache.RemoveOldest()
 	cache.GetAll()
+
+	cache.Add("2", String("fuck fuck"))
+	cache.GetAll()
+
+	cache.RemoveOldest()
+	cache.GetAll()
 }

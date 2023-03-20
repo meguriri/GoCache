@@ -65,6 +65,7 @@ func (c *fifoCache) Add(key string, value data.Value) {
 }
 
 func (c *fifoCache) GetAll() {
+	fmt.Println("MaxBytes: ", c.maxBytes, ";nowUsedBytes: ", c.nBytes)
 	fmt.Printf("[")
 	for i := c.list.Front(); i != nil; i = i.Next() {
 		kv := i.Value.(*data.Entry)

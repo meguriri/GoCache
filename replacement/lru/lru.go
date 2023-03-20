@@ -67,10 +67,11 @@ func (c *lruCache) Add(key string, value data.Value) { //添加或更新节点�
 }
 
 func (c *lruCache) GetAll() { //获取全部节点
+	fmt.Println("MaxBytes: ", c.maxBytes, ";nowUsedBytes: ", c.nBytes)
 	fmt.Printf("[")
 	for i := c.list.Front(); i != nil; i = i.Next() {
 		kv := i.Value.(*data.Entry)
 		fmt.Printf("key: %v,value: %v; ", kv.Key, kv.Value)
 	}
-	fmt.Printf("]\n")
+	fmt.Printf("]\n\n")
 }
