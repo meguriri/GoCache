@@ -7,7 +7,7 @@ import (
 	"github.com/meguriri/GoCache/data"
 )
 
-type lfuCache struct {
+type lfuCacheManager struct {
 	maxBytes  int64                              //允许使用的最大内存
 	nBytes    int64                              //当前使用的内存
 	minFreq   int                                //最少使用频率
@@ -16,8 +16,8 @@ type lfuCache struct {
 	OnEvicted func(key string, value data.Value) //节点被移除的回调函数
 }
 
-func New(onEvicted func(key string, value data.Value)) *lfuCache {
-	return &lfuCache{
+func New(onEvicted func(key string, value data.Value)) *lfuCacheManager {
+	return &lfuCacheManager{
 		maxBytes:  data.MaxBytes,
 		nBytes:    0,
 		minFreq:   1,
@@ -27,11 +27,11 @@ func New(onEvicted func(key string, value data.Value)) *lfuCache {
 	}
 }
 
-func (c *lfuCache) Len() int {
+func (c *lfuCacheManager) Len() int {
 	return len(c.cacheMap)
 }
 
-func (c *lfuCache) AddToNewFreqList(lfuEntry *data.LfuEntry, used int) *list.Element {
+func (c *lfuCacheManager) AddToNewFreqList(lfuEntry *data.LfuEntry, used int) *list.Element {
 	var newList *list.List
 	if l, ok := c.freqMap[used]; ok {
 		newList = l
@@ -42,7 +42,7 @@ func (c *lfuCache) AddToNewFreqList(lfuEntry *data.LfuEntry, used int) *list.Ele
 	}
 	return newList.PushBack(lfuEntry)
 }
-func (c *lfuCache) RemoveFreqList(element *list.Element) *data.LfuEntry {
+func (c *lfuCacheManager) RemoveFreqList(element *list.Element) *data.LfuEntry {
 	kv := element.Value.(*data.LfuEntry)
 	oldList := c.freqMap[kv.Used]
 	oldList.Remove(element)
@@ -62,7 +62,7 @@ func (c *lfuCache) RemoveFreqList(element *list.Element) *data.LfuEntry {
 	return kv
 }
 
-func (c *lfuCache) Get(key string) (data.Value, bool) {
+func (c *lfuCacheManager) Get(key string) (data.Value, bool) {
 	if element, ok := c.cacheMap[key]; ok { //根据cacheMap 找到*element
 		kv := c.RemoveFreqList(element)
 		newElement := c.AddToNewFreqList(kv, kv.Used)
@@ -72,7 +72,7 @@ func (c *lfuCache) Get(key string) (data.Value, bool) {
 	return nil, false
 }
 
-func (c *lfuCache) RemoveOldest() {
+func (c *lfuCacheManager) RemoveOldest() {
 	oldList := c.freqMap[c.minFreq]
 	element := oldList.Front()
 	kv := element.Value.(*data.LfuEntry)
@@ -88,7 +88,7 @@ func (c *lfuCache) RemoveOldest() {
 	}
 }
 
-func (c *lfuCache) Add(key string, value data.Value) {
+func (c *lfuCacheManager) Add(key string, value data.Value) {
 	if element, ok := c.cacheMap[key]; ok { //节点存在，更新  从cacheMap获取*element
 		kv := c.RemoveFreqList(element)
 		newElement := c.AddToNewFreqList(kv, kv.Used)
@@ -112,7 +112,7 @@ func (c *lfuCache) Add(key string, value data.Value) {
 	}
 }
 
-func (c *lfuCache) GetAll() {
+func (c *lfuCacheManager) GetAll() {
 	fmt.Println("MaxBytes: ", c.maxBytes, ";nowUsedBytes: ", c.nBytes, ";minFreq: ", c.minFreq)
 	fmt.Printf("{\n")
 	for i, list := range c.freqMap {

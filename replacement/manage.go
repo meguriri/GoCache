@@ -9,7 +9,7 @@ import (
 	"github.com/meguriri/GoCache/replacement/lru"
 )
 
-func NewCache(t string) data.Cache {
+func NewCache(t string) data.CacheManager {
 	switch t {
 	case "FIFO":
 		log.Println("use FIFO")

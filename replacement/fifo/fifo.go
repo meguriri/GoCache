@@ -7,7 +7,7 @@ import (
 	"github.com/meguriri/GoCache/data"
 )
 
-type fifoCache struct { //Cache
+type fifoCacheManager struct { //Cache
 	maxBytes  int64                              //允许使用的最大内存
 	nBytes    int64                              //当前使用的内存
 	list      *list.List                         //双向链表
@@ -15,8 +15,8 @@ type fifoCache struct { //Cache
 	OnEvicted func(key string, value data.Value) //节点被移除的回调函数
 }
 
-func New(onEvicted func(key string, value data.Value)) *fifoCache { //初始化Cache
-	return &fifoCache{
+func New(onEvicted func(key string, value data.Value)) *fifoCacheManager { //初始化Cache
+	return &fifoCacheManager{
 		maxBytes:  data.MaxBytes,
 		nBytes:    0,
 		list:      list.New(),
@@ -25,11 +25,11 @@ func New(onEvicted func(key string, value data.Value)) *fifoCache { //初始化C
 	}
 }
 
-func (c *fifoCache) Len() int {
+func (c *fifoCacheManager) Len() int {
 	return c.list.Len()
 }
 
-func (c *fifoCache) Get(key string) (data.Value, bool) {
+func (c *fifoCacheManager) Get(key string) (data.Value, bool) {
 	if element, ok := c.cacheMap[key]; ok {
 		kv := element.Value.(*data.Entry)
 		return kv.Value, true
@@ -37,7 +37,7 @@ func (c *fifoCache) Get(key string) (data.Value, bool) {
 	return nil, false
 }
 
-func (c *fifoCache) RemoveOldest() {
+func (c *fifoCacheManager) RemoveOldest() {
 	if element := c.list.Front(); element != nil {
 		c.list.Remove(element)
 		kv := element.Value.(*data.Entry)
@@ -49,7 +49,7 @@ func (c *fifoCache) RemoveOldest() {
 	}
 }
 
-func (c *fifoCache) Add(key string, value data.Value) {
+func (c *fifoCacheManager) Add(key string, value data.Value) {
 	if element, ok := c.cacheMap[key]; ok {
 		kv := element.Value.(*data.Entry)
 		c.nBytes = c.nBytes - int64(kv.Value.Len()) + int64(value.Len())
@@ -64,7 +64,7 @@ func (c *fifoCache) Add(key string, value data.Value) {
 	}
 }
 
-func (c *fifoCache) GetAll() {
+func (c *fifoCacheManager) GetAll() {
 	fmt.Println("MaxBytes: ", c.maxBytes, ";nowUsedBytes: ", c.nBytes)
 	fmt.Printf("[")
 	for i := c.list.Front(); i != nil; i = i.Next() {

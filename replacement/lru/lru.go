@@ -7,7 +7,7 @@ import (
 	"github.com/meguriri/GoCache/data"
 )
 
-type lruCache struct { //Cache
+type lruCacheManager struct { //Cache
 	maxBytes  int64                              //允许使用的最大内存
 	nBytes    int64                              //当前使用的内存
 	list      *list.List                         //双向链表
@@ -15,8 +15,8 @@ type lruCache struct { //Cache
 	OnEvicted func(key string, value data.Value) //节点被移除的回调函数
 }
 
-func New(onEvicted func(key string, value data.Value)) *lruCache { //初始化Cache
-	return &lruCache{
+func New(onEvicted func(key string, value data.Value)) *lruCacheManager { //初始化Cache
+	return &lruCacheManager{
 		maxBytes:  data.MaxBytes,
 		nBytes:    0,
 		list:      list.New(),
@@ -25,11 +25,11 @@ func New(onEvicted func(key string, value data.Value)) *lruCache { //初始化Ca
 	}
 }
 
-func (c *lruCache) Len() int { //获取链表长度
+func (c *lruCacheManager) Len() int { //获取链表长度
 	return c.list.Len()
 }
 
-func (c *lruCache) Get(key string) (data.Value, bool) { //获得value
+func (c *lruCacheManager) Get(key string) (data.Value, bool) { //获得value
 	if element, ok := c.cacheMap[key]; ok { //key存在
 		c.list.MoveToBack(element)        //将节点移至队尾
 		kv := element.Value.(*data.Entry) //获取该键值对
@@ -38,7 +38,7 @@ func (c *lruCache) Get(key string) (data.Value, bool) { //获得value
 	return nil, false //key不存在，返回nil，false
 }
 
-func (c *lruCache) RemoveOldest() { //缓存淘汰，删除队首节点
+func (c *lruCacheManager) RemoveOldest() { //缓存淘汰，删除队首节点
 	if element := c.list.Front(); element != nil { //队首存在元素
 		c.list.Remove(element)                                 //链表中删除队首节点
 		kv := element.Value.(*data.Entry)                      //获取队首键值对
@@ -50,7 +50,7 @@ func (c *lruCache) RemoveOldest() { //缓存淘汰，删除队首节点
 	}
 }
 
-func (c *lruCache) Add(key string, value data.Value) { //添加或更新节点到cache中
+func (c *lruCacheManager) Add(key string, value data.Value) { //添加或更新节点到cache中
 	if element, ok := c.cacheMap[key]; ok { //节点存在，更新
 		c.list.MoveToBack(element)                                       //节点移植队尾
 		kv := element.Value.(*data.Entry)                                //获取键值对
@@ -66,7 +66,7 @@ func (c *lruCache) Add(key string, value data.Value) { //添加或更新节点�
 	}
 }
 
-func (c *lruCache) GetAll() { //获取全部节点
+func (c *lruCacheManager) GetAll() { //获取全部节点
 	fmt.Println("MaxBytes: ", c.maxBytes, ";nowUsedBytes: ", c.nBytes)
 	fmt.Printf("[")
 	for i := c.list.Front(); i != nil; i = i.Next() {

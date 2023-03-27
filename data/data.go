@@ -5,6 +5,14 @@ var (
 	ReplacementPolicy string
 )
 
+type CacheManager interface { //Cache
+	Len() int
+	Get(string) (Value, bool)
+	RemoveOldest()
+	Add(string, Value)
+	GetAll()
+}
+
 type Value interface { //键值对的值接口
 	Len() int //value占的内存大小
 }
