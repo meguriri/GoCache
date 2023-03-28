@@ -1,4 +1,4 @@
-package data
+package replacement
 
 var (
 	MaxBytes          int64

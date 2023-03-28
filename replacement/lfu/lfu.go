@@ -4,21 +4,21 @@ import (
 	"container/list"
 	"fmt"
 
-	"github.com/meguriri/GoCache/data"
+	"github.com/meguriri/GoCache/replacement"
 )
 
 type lfuCacheManager struct {
-	maxBytes  int64                              //允许使用的最大内存
-	nBytes    int64                              //当前使用的内存
-	minFreq   int                                //最少使用频率
-	cacheMap  map[string]*list.Element           //指向链表节点的字典
-	freqMap   map[int]*list.List                 //使用频率的字典
-	OnEvicted func(key string, value data.Value) //节点被移除的回调函数
+	maxBytes  int64                                     //允许使用的最大内存
+	nBytes    int64                                     //当前使用的内存
+	minFreq   int                                       //最少使用频率
+	cacheMap  map[string]*list.Element                  //指向链表节点的字典
+	freqMap   map[int]*list.List                        //使用频率的字典
+	OnEvicted func(key string, value replacement.Value) //节点被移除的回调函数
 }
 
-func New(onEvicted func(key string, value data.Value)) *lfuCacheManager {
+func New(onEvicted func(key string, value replacement.Value)) *lfuCacheManager {
 	return &lfuCacheManager{
-		maxBytes:  data.MaxBytes,
+		maxBytes:  replacement.MaxBytes,
 		nBytes:    0,
 		minFreq:   1,
 		cacheMap:  make(map[string]*list.Element),
@@ -31,7 +31,7 @@ func (c *lfuCacheManager) Len() int {
 	return len(c.cacheMap)
 }
 
-func (c *lfuCacheManager) AddToNewFreqList(lfuEntry *data.LfuEntry, used int) *list.Element {
+func (c *lfuCacheManager) AddToNewFreqList(lfuEntry *replacement.LfuEntry, used int) *list.Element {
 	var newList *list.List
 	if l, ok := c.freqMap[used]; ok {
 		newList = l
@@ -42,8 +42,8 @@ func (c *lfuCacheManager) AddToNewFreqList(lfuEntry *data.LfuEntry, used int) *l
 	}
 	return newList.PushBack(lfuEntry)
 }
-func (c *lfuCacheManager) RemoveFreqList(element *list.Element) *data.LfuEntry {
-	kv := element.Value.(*data.LfuEntry)
+func (c *lfuCacheManager) RemoveFreqList(element *list.Element) *replacement.LfuEntry {
+	kv := element.Value.(*replacement.LfuEntry)
 	oldList := c.freqMap[kv.Used]
 	oldList.Remove(element)
 	if oldList.Len() == 0 {
@@ -53,7 +53,7 @@ func (c *lfuCacheManager) RemoveFreqList(element *list.Element) *data.LfuEntry {
 		delete(c.freqMap, kv.Used)
 	}
 	kv.Used++
-	// lfuEntry := &data.LfuEntry{
+	// lfuEntry := &replacement.LfuEntry{
 	// 	Key:   kv.Key,
 	// 	Value: kv.Value,
 	// 	Used:  kv.Used,
@@ -62,7 +62,7 @@ func (c *lfuCacheManager) RemoveFreqList(element *list.Element) *data.LfuEntry {
 	return kv
 }
 
-func (c *lfuCacheManager) Get(key string) (data.Value, bool) {
+func (c *lfuCacheManager) Get(key string) (replacement.Value, bool) {
 	if element, ok := c.cacheMap[key]; ok { //根据cacheMap 找到*element
 		kv := c.RemoveFreqList(element)
 		newElement := c.AddToNewFreqList(kv, kv.Used)
@@ -75,7 +75,7 @@ func (c *lfuCacheManager) Get(key string) (data.Value, bool) {
 func (c *lfuCacheManager) RemoveOldest() {
 	oldList := c.freqMap[c.minFreq]
 	element := oldList.Front()
-	kv := element.Value.(*data.LfuEntry)
+	kv := element.Value.(*replacement.LfuEntry)
 	delete(c.cacheMap, kv.Key)
 	oldList.Remove(element)
 	if oldList.Len() == 0 {
@@ -88,7 +88,7 @@ func (c *lfuCacheManager) RemoveOldest() {
 	}
 }
 
-func (c *lfuCacheManager) Add(key string, value data.Value) {
+func (c *lfuCacheManager) Add(key string, value replacement.Value) {
 	if element, ok := c.cacheMap[key]; ok { //节点存在，更新  从cacheMap获取*element
 		kv := c.RemoveFreqList(element)
 		newElement := c.AddToNewFreqList(kv, kv.Used)
@@ -96,7 +96,7 @@ func (c *lfuCacheManager) Add(key string, value data.Value) {
 		c.nBytes = c.nBytes - int64(kv.Value.Len()) + int64(value.Len())
 		kv.Value = value
 	} else { //节点不存在，添加
-		lfuEntry := &data.LfuEntry{
+		lfuEntry := &replacement.LfuEntry{
 			Key:   key,
 			Value: value,
 			Used:  1,
@@ -118,7 +118,7 @@ func (c *lfuCacheManager) GetAll() {
 	for i, list := range c.freqMap {
 		fmt.Printf("%d: [", i)
 		for j := list.Front(); j != nil; j = j.Next() {
-			kv := j.Value.(*data.LfuEntry)
+			kv := j.Value.(*replacement.LfuEntry)
 			fmt.Printf("key:%v,value:%v; ", kv.Key, kv.Value)
 		}
 		fmt.Printf("]\n")

@@ -3,33 +3,33 @@ package cache
 import (
 	"sync"
 
-	"github.com/meguriri/GoCache/data"
 	"github.com/meguriri/GoCache/replacement"
+	"github.com/meguriri/GoCache/replacement/manager"
 )
 
-type cache struct {
+type Cache struct {
 	lock       sync.Mutex
-	manager    data.CacheManager
+	manager    replacement.CacheManager
 	cacheBytes int64
 }
 
-func (c *cache) add(key string, value data.ByteView) {
+func (c *Cache) add(key string, value ByteView) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	if c.manager == nil {
-		c.manager = replacement.NewCache(data.ReplacementPolicy)
+		c.manager = manager.NewCache(replacement.ReplacementPolicy)
 	}
 	c.manager.Add(key, value)
 }
 
-func (c *cache) get(key string) (value data.ByteView, ok bool) {
+func (c *Cache) get(key string) (value ByteView, ok bool) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	if c.manager == nil {
 		return value, false
 	}
 	if v, ok := c.manager.Get(key); ok {
-		return v.(data.ByteView), ok
+		return v.(ByteView), ok
 	}
 	return
 }
