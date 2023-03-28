@@ -1,17 +1,19 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
+	"github.com/meguriri/GoCache/cache"
+	"github.com/meguriri/GoCache/callback"
+	"github.com/meguriri/GoCache/communicated/http"
 	"github.com/meguriri/GoCache/config"
-	"github.com/meguriri/GoCache/data"
-	"github.com/meguriri/GoCache/replacement"
 )
 
-type String string
-
-func (s String) Len() int {
-	return len(s)
+var db = map[string]string{
+	"Tom":  "630",
+	"Jack": "589",
+	"Sam":  "567",
 }
 
 func main() {
@@ -20,38 +22,16 @@ func main() {
 		log.Println("config err:", err)
 	}
 
-	cache := replacement.NewCache(data.ReplacementPolicy)
-	cache.Add("1", String("1234"))
-	cache.GetAll()
+	cache.NewGroup("scores", 2<<10, callback.CallBackFunc(
+		func(key string) ([]byte, error) {
+			log.Println("[SlowDB] search key", key)
+			if v, ok := db[key]; ok {
+				return []byte(v), nil
+			}
+			return nil, fmt.Errorf("%s not exist", key)
+		}))
 
-	cache.Add("2", String("fuck"))
-	cache.GetAll()
-
-	cache.Add("3", String("hahah"))
-	cache.GetAll()
-
-	if _, ok := cache.Get("2"); ok {
-		cache.GetAll()
-	}
-	cache.Add("4", String("caonima"))
-	cache.GetAll()
-
-	cache.Add("1", String("2345"))
-	cache.GetAll()
-
-	if _, ok := cache.Get("1"); ok {
-		cache.GetAll()
-	}
-
-	cache.RemoveOldest()
-	cache.GetAll()
-
-	cache.RemoveOldest()
-	cache.GetAll()
-
-	cache.Add("2", String("fuck fuck"))
-	cache.GetAll()
-
-	cache.RemoveOldest()
-	cache.GetAll()
+	addr := "localhost:9999"
+	r := http.RouterInit()
+	r.Run(addr)
 }
