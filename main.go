@@ -28,11 +28,9 @@ func main() {
 	manager.NewPeer("http://127.0.0.1:8082", 1024, callback.CallBackFunc(cb))
 	manager.NewPeer("http://127.0.0.1:8083", 1024, callback.CallBackFunc(cb))
 
-	//manager.Connect()
-	//time.Sleep(time.Second * 5)
 	ctx := context.Background()
 	for i := 0; i <= 10; i++ {
-		req := &proto.CacheRequest{Group: strconv.Itoa(i), Key: strconv.Itoa(i)}
+		req := &proto.CacheRequest{Key: strconv.Itoa(i)}
 		res, err := manager.Get(ctx, req)
 		if err != nil {
 			log.Println(i, " get error1: ", err)
