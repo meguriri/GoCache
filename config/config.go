@@ -1,6 +1,7 @@
 package config
 
 import (
+	m "github.com/meguriri/GoCache/manager"
 	"github.com/meguriri/GoCache/replacement"
 	"github.com/spf13/viper"
 )
@@ -14,8 +15,9 @@ func Configinit() error {
 		return err
 	}
 
-	replacement.ReplacementPolicy = viper.GetString("replacement-policy")
-	replacement.MaxBytes = viper.GetInt64("max-bytes")
-
+	replacement.ReplacementPolicy = viper.GetString("replacement.policy")
+	replacement.MaxBytes = viper.GetInt64("replacement.max-bytes")
+	m.DefaultbasePath = viper.GetString("defaultbasePath")
+	m.DefaultReplicas = viper.GetInt("defaultReplicas")
 	return nil
 }

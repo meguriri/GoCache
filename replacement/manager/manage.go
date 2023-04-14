@@ -10,15 +10,16 @@ import (
 )
 
 func NewCache(t string) replacement.CacheManager {
+	log.Printf("[NewCache] ")
 	switch t {
 	case "FIFO":
-		log.Println("use FIFO")
+		log.Printf("use FIFO\n")
 		return fifo.New(nil)
 	case "LFU":
-		log.Println("use LFU")
+		log.Printf("use LFU\n")
 		return lfu.New(nil)
 	case "LRU":
-		log.Println("use LRU")
+		log.Printf("use LRU\n")
 		return lru.New(nil)
 	}
 	return nil
