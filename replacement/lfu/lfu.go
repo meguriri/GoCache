@@ -53,12 +53,6 @@ func (c *lfuCacheManager) RemoveFreqList(element *list.Element) *replacement.Lfu
 		delete(c.freqMap, kv.Used)
 	}
 	kv.Used++
-	// lfuEntry := &replacement.LfuEntry{
-	// 	Key:   kv.Key,
-	// 	Value: kv.Value,
-	// 	Used:  kv.Used,
-	// }
-	//c.AddToNewFreqList(lfuEntry, kv.Used)
 	return kv
 }
 
@@ -124,4 +118,21 @@ func (c *lfuCacheManager) GetAll() {
 		fmt.Printf("]\n")
 	}
 	fmt.Printf("}\n\n")
+}
+
+func (c *lfuCacheManager) Delete(key string) bool {
+	if element, ok := c.cacheMap[key]; ok {
+		kv := element.Value.(*replacement.LfuEntry)
+		delete(c.cacheMap, kv.Key)
+		for _, list := range c.freqMap {
+			list.Remove(element)
+			if list.Len() == 0 {
+				delete(c.freqMap, c.minFreq)
+				c.minFreq++
+			}
+		}
+		c.nBytes -= int64(len(kv.Key)) + int64(kv.Value.Len()) + 8
+		return true
+	}
+	return false
 }

@@ -1,11 +1,9 @@
 package cache
 
-type ByteView struct {
-	b []byte
-}
+type ByteView []byte
 
 func (v ByteView) Len() int {
-	return len(v.b)
+	return len(v)
 }
 
 func cloneBytes(b []byte) []byte {
@@ -15,9 +13,9 @@ func cloneBytes(b []byte) []byte {
 }
 
 func (v ByteView) GetByte() []byte {
-	return cloneBytes(v.b)
+	return cloneBytes(v)
 }
 
 func (v ByteView) String() string {
-	return string(v.b)
+	return string(v)
 }

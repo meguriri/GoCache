@@ -7,6 +7,7 @@ var (
 
 type CacheManager interface { //Cache
 	Len() int
+	Delete(string) bool
 	Get(string) (Value, bool)
 	RemoveOldest()
 	Add(string, Value)

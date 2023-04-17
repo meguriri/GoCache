@@ -20,13 +20,17 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	GroupCache_Get_FullMethodName = "/GroupCache/Get"
+	GroupCache_Set_FullMethodName = "/GroupCache/Set"
+	GroupCache_Del_FullMethodName = "/GroupCache/Del"
 )
 
 // GroupCacheClient is the client API for GroupCache service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GroupCacheClient interface {
-	Get(ctx context.Context, in *CacheRequest, opts ...grpc.CallOption) (*CacheResponse, error)
+	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
+	Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*SetResponse, error)
+	Del(ctx context.Context, in *DelRequest, opts ...grpc.CallOption) (*DelResponse, error)
 }
 
 type groupCacheClient struct {
@@ -37,9 +41,27 @@ func NewGroupCacheClient(cc grpc.ClientConnInterface) GroupCacheClient {
 	return &groupCacheClient{cc}
 }
 
-func (c *groupCacheClient) Get(ctx context.Context, in *CacheRequest, opts ...grpc.CallOption) (*CacheResponse, error) {
-	out := new(CacheResponse)
+func (c *groupCacheClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
+	out := new(GetResponse)
 	err := c.cc.Invoke(ctx, GroupCache_Get_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *groupCacheClient) Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*SetResponse, error) {
+	out := new(SetResponse)
+	err := c.cc.Invoke(ctx, GroupCache_Set_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *groupCacheClient) Del(ctx context.Context, in *DelRequest, opts ...grpc.CallOption) (*DelResponse, error) {
+	out := new(DelResponse)
+	err := c.cc.Invoke(ctx, GroupCache_Del_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +72,9 @@ func (c *groupCacheClient) Get(ctx context.Context, in *CacheRequest, opts ...gr
 // All implementations must embed UnimplementedGroupCacheServer
 // for forward compatibility
 type GroupCacheServer interface {
-	Get(context.Context, *CacheRequest) (*CacheResponse, error)
+	Get(context.Context, *GetRequest) (*GetResponse, error)
+	Set(context.Context, *SetRequest) (*SetResponse, error)
+	Del(context.Context, *DelRequest) (*DelResponse, error)
 	mustEmbedUnimplementedGroupCacheServer()
 }
 
@@ -58,8 +82,14 @@ type GroupCacheServer interface {
 type UnimplementedGroupCacheServer struct {
 }
 
-func (UnimplementedGroupCacheServer) Get(context.Context, *CacheRequest) (*CacheResponse, error) {
+func (UnimplementedGroupCacheServer) Get(context.Context, *GetRequest) (*GetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (UnimplementedGroupCacheServer) Set(context.Context, *SetRequest) (*SetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Set not implemented")
+}
+func (UnimplementedGroupCacheServer) Del(context.Context, *DelRequest) (*DelResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Del not implemented")
 }
 func (UnimplementedGroupCacheServer) mustEmbedUnimplementedGroupCacheServer() {}
 
@@ -75,7 +105,7 @@ func RegisterGroupCacheServer(s grpc.ServiceRegistrar, srv GroupCacheServer) {
 }
 
 func _GroupCache_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CacheRequest)
+	in := new(GetRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -87,7 +117,43 @@ func _GroupCache_Get_Handler(srv interface{}, ctx context.Context, dec func(inte
 		FullMethod: GroupCache_Get_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GroupCacheServer).Get(ctx, req.(*CacheRequest))
+		return srv.(GroupCacheServer).Get(ctx, req.(*GetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GroupCache_Set_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupCacheServer).Set(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupCache_Set_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupCacheServer).Set(ctx, req.(*SetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GroupCache_Del_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupCacheServer).Del(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupCache_Del_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupCacheServer).Del(ctx, req.(*DelRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -102,6 +168,14 @@ var GroupCache_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Get",
 			Handler:    _GroupCache_Get_Handler,
+		},
+		{
+			MethodName: "Set",
+			Handler:    _GroupCache_Set_Handler,
+		},
+		{
+			MethodName: "Del",
+			Handler:    _GroupCache_Del_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

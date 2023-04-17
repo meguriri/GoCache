@@ -75,3 +75,14 @@ func (c *lruCacheManager) GetAll() { //获取全部节点
 	}
 	fmt.Printf("]\n\n")
 }
+
+func (c *lruCacheManager) Delete(key string) bool {
+	if element, ok := c.cacheMap[key]; ok {
+		kv := element.Value.(*replacement.Entry)
+		c.list.Remove(element)
+		delete(c.cacheMap, key)
+		c.nBytes -= int64(len(kv.Key)) + int64(kv.Value.Len())
+		return true
+	}
+	return false
+}

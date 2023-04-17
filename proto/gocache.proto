@@ -3,14 +3,34 @@ syntax = "proto3";
 option go_package = "./;proto";
 
 
-message CacheRequest {
+message GetRequest {
   string key = 1;
 }
 
-message CacheResponse {
+message GetResponse {
   bytes value = 1;
 }
 
-service GroupCache {
-  rpc Get(CacheRequest) returns (CacheResponse);
+message SetRequest {
+  string key = 1;
+  bytes value =2;
 }
+
+message SetResponse {
+  bool status=1;
+}
+
+message DelRequest {
+  string key = 1;
+}
+
+message DelResponse {
+  bool status=1;
+}
+
+service GroupCache {
+  rpc Get(GetRequest) returns (GetResponse);
+  rpc Set(SetRequest) returns (SetResponse);
+  rpc Del(DelRequest) returns (DelResponse);
+}
+
