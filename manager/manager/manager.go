@@ -118,8 +118,31 @@ func (m *Manager) GetAllPeer() []*cache.CachePeer {
 func (m *Manager) KillPeer(addr string) (bool, error) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
-	peer := m.cachePeers[addr]
+	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+		return false, err
+	}
+	// 延迟关闭连接
+	defer conn.Close()
 
+	// 初始化Greeter服务客户端
+	c := pb.NewGroupCacheClient(conn)
+
+	// 初始化上下文，设置请求超时时间为1秒
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	// 延迟关闭请求会话
+	defer cancel()
+
+	// 调用Get接口，发送一条消息
+	r, err := c.Ping(ctx, &pb.PingRequest{Msg: "kill"})
+	if err != nil {
+		log.Fatalf("could not greet: %v", err)
+		return false, err
+	}
+
+	// 打印服务的返回的消息
+	log.Printf("Greeting: %s", r.Code)
 	delete(m.cachePeers, addr)
 	return true, nil
 }

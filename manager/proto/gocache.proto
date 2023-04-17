@@ -28,9 +28,18 @@ message DelResponse {
   bool status=1;
 }
 
+message PingRequest {
+  string msg = 1;
+}
+
+message PingResponse {
+  int32 code=1;
+}
+
 service GroupCache {
   rpc Get(GetRequest) returns (GetResponse);
   rpc Set(SetRequest) returns (SetResponse);
   rpc Del(DelRequest) returns (DelResponse);
+  rpc Ping(PingRequest) returns(PingResponse);
 }
 

@@ -74,3 +74,14 @@ func (c *CachePeer) storage(key string) (ByteView, error) {
 	c.Manager.Add(key, ByteView(value))
 	return ByteView(value), nil
 }
+
+func (c *CachePeer) Ping(ctx context.Context, in *pb.PingRequest) (*pb.PingResponse, error) {
+	msg := in.Msg
+	if msg == "connect" {
+		return &pb.PingResponse{Code: 201}, nil
+	} else if msg == "kill" {
+		return &pb.PingResponse{Code: 202}, nil
+	} else {
+		return &pb.PingResponse{Code: 404}, fmt.Errorf("Illegal request")
+	}
+}

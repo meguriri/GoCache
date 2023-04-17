@@ -19,9 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	GroupCache_Get_FullMethodName = "/GroupCache/Get"
-	GroupCache_Set_FullMethodName = "/GroupCache/Set"
-	GroupCache_Del_FullMethodName = "/GroupCache/Del"
+	GroupCache_Get_FullMethodName  = "/GroupCache/Get"
+	GroupCache_Set_FullMethodName  = "/GroupCache/Set"
+	GroupCache_Del_FullMethodName  = "/GroupCache/Del"
+	GroupCache_Ping_FullMethodName = "/GroupCache/Ping"
 )
 
 // GroupCacheClient is the client API for GroupCache service.
@@ -31,6 +32,7 @@ type GroupCacheClient interface {
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*SetResponse, error)
 	Del(ctx context.Context, in *DelRequest, opts ...grpc.CallOption) (*DelResponse, error)
+	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
 }
 
 type groupCacheClient struct {
@@ -68,6 +70,15 @@ func (c *groupCacheClient) Del(ctx context.Context, in *DelRequest, opts ...grpc
 	return out, nil
 }
 
+func (c *groupCacheClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error) {
+	out := new(PingResponse)
+	err := c.cc.Invoke(ctx, GroupCache_Ping_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GroupCacheServer is the server API for GroupCache service.
 // All implementations must embed UnimplementedGroupCacheServer
 // for forward compatibility
@@ -75,6 +86,7 @@ type GroupCacheServer interface {
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	Set(context.Context, *SetRequest) (*SetResponse, error)
 	Del(context.Context, *DelRequest) (*DelResponse, error)
+	Ping(context.Context, *PingRequest) (*PingResponse, error)
 	mustEmbedUnimplementedGroupCacheServer()
 }
 
@@ -90,6 +102,9 @@ func (UnimplementedGroupCacheServer) Set(context.Context, *SetRequest) (*SetResp
 }
 func (UnimplementedGroupCacheServer) Del(context.Context, *DelRequest) (*DelResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Del not implemented")
+}
+func (UnimplementedGroupCacheServer) Ping(context.Context, *PingRequest) (*PingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
 func (UnimplementedGroupCacheServer) mustEmbedUnimplementedGroupCacheServer() {}
 
@@ -158,6 +173,24 @@ func _GroupCache_Del_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GroupCache_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupCacheServer).Ping(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupCache_Ping_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupCacheServer).Ping(ctx, req.(*PingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GroupCache_ServiceDesc is the grpc.ServiceDesc for GroupCache service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -176,6 +209,10 @@ var GroupCache_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Del",
 			Handler:    _GroupCache_Del_Handler,
+		},
+		{
+			MethodName: "Ping",
+			Handler:    _GroupCache_Ping_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

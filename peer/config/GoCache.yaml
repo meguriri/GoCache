@@ -1,0 +1,21 @@
+#淘汰策略
+replacement: 
+#最大内存空间
+  max-bytes: 1000000
+#使用的淘汰策略
+  policy: LFU
+
+#默认baseURL
+defaultbasePath: "/gocahe/"
+#默认虚拟节点个数
+defaultReplicas: 50
+
+#服务配置
+server:
+  #IP地址
+  IP: localhost
+  #端口
+  Port: 8001
+
+#最多节点个数
+Max-Peers: 100
