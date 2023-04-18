@@ -1,10 +1,10 @@
 package fifo
 
 import (
+	"bytes"
 	"container/list"
-	"fmt"
 
-	"github.com/meguriri/GoCache/replacement"
+	"github.com/meguriri/GoCache/server/replacement"
 )
 
 type fifoCacheManager struct { //Cache
@@ -26,7 +26,7 @@ func New(onEvicted func(key string, value replacement.Value)) *fifoCacheManager 
 }
 
 func (c *fifoCacheManager) Len() int {
-	return c.list.Len()
+	return int(c.nBytes)
 }
 
 func (c *fifoCacheManager) Get(key string) (replacement.Value, bool) {
@@ -64,14 +64,18 @@ func (c *fifoCacheManager) Add(key string, value replacement.Value) {
 	}
 }
 
-func (c *fifoCacheManager) GetAll() {
-	fmt.Println("MaxBytes: ", c.maxBytes, ";nowUsedBytes: ", c.nBytes)
-	fmt.Printf("[")
+func (c *fifoCacheManager) GetAll() [][]byte {
+	res := make([][]byte, 0)
 	for i := c.list.Front(); i != nil; i = i.Next() {
 		kv := i.Value.(*replacement.Entry)
-		fmt.Printf("key: %v,value: %v; ", kv.Key, kv.Value)
+		buffer := bytes.NewBufferString(kv.Key + ",")
+		buffer.Write(kv.Value.ToByte())
+		buffer.WriteByte('\r')
+		buffer.WriteByte('\n')
+		bytes := buffer.Bytes()
+		res = append(res, bytes)
 	}
-	fmt.Printf("]\n")
+	return res
 }
 
 func (c *fifoCacheManager) Delete(key string) bool {

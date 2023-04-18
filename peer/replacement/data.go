@@ -11,10 +11,11 @@ type CacheManager interface { //Cache
 	Get(string) (Value, bool)
 	RemoveOldest()
 	Add(string, Value)
-	GetAll()
+	GetAll() [][]byte
 }
 
 type Value interface { //键值对的值接口
+	ToByte() []byte
 	Len() int //value占的内存大小
 }
 

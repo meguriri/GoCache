@@ -3,10 +3,10 @@ package manager
 import (
 	"log"
 
-	"github.com/meguriri/GoCache/replacement"
-	"github.com/meguriri/GoCache/replacement/fifo"
-	"github.com/meguriri/GoCache/replacement/lfu"
-	"github.com/meguriri/GoCache/replacement/lru"
+	"github.com/meguriri/GoCache/peer/replacement"
+	"github.com/meguriri/GoCache/peer/replacement/fifo"
+	"github.com/meguriri/GoCache/peer/replacement/lfu"
+	"github.com/meguriri/GoCache/peer/replacement/lru"
 )
 
 func NewCache(t string) replacement.CacheManager {

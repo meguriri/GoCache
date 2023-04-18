@@ -12,7 +12,7 @@ func cloneBytes(b []byte) []byte {
 	return c
 }
 
-func (v ByteView) GetByte() []byte {
+func (v ByteView) ToByte() []byte {
 	return cloneBytes(v)
 }
 

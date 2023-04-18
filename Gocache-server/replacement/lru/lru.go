@@ -1,10 +1,10 @@
 package lru
 
 import (
+	"bytes"
 	"container/list"
-	"fmt"
 
-	"github.com/meguriri/GoCache/replacement"
+	"github.com/meguriri/GoCache/server/replacement"
 )
 
 type lruCacheManager struct { //Cache
@@ -26,7 +26,7 @@ func New(onEvicted func(key string, value replacement.Value)) *lruCacheManager {
 }
 
 func (c *lruCacheManager) Len() int { //获取链表长度
-	return c.list.Len()
+	return int(c.nBytes)
 }
 
 func (c *lruCacheManager) Get(key string) (replacement.Value, bool) { //获得value
@@ -66,14 +66,18 @@ func (c *lruCacheManager) Add(key string, value replacement.Value) { //添加或
 	}
 }
 
-func (c *lruCacheManager) GetAll() { //获取全部节点
-	fmt.Println("MaxBytes: ", c.maxBytes, ";nowUsedBytes: ", c.nBytes)
-	fmt.Printf("[")
+func (c *lruCacheManager) GetAll() [][]byte { //获取全部节点
+	res := make([][]byte, 0)
 	for i := c.list.Front(); i != nil; i = i.Next() {
 		kv := i.Value.(*replacement.Entry)
-		fmt.Printf("key: %v,value: %v; ", kv.Key, kv.Value)
+		buffer := bytes.NewBufferString(kv.Key + ",")
+		buffer.Write(kv.Value.ToByte())
+		buffer.WriteByte('\r')
+		buffer.WriteByte('\n')
+		bytes := buffer.Bytes()
+		res = append(res, bytes)
 	}
-	fmt.Printf("]\n\n")
+	return res
 }
 
 func (c *lruCacheManager) Delete(key string) bool {

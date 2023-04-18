@@ -1,10 +1,10 @@
 package lfu
 
 import (
+	"bytes"
 	"container/list"
-	"fmt"
 
-	"github.com/meguriri/GoCache/replacement"
+	"github.com/meguriri/GoCache/server/replacement"
 )
 
 type lfuCacheManager struct {
@@ -28,7 +28,7 @@ func New(onEvicted func(key string, value replacement.Value)) *lfuCacheManager {
 }
 
 func (c *lfuCacheManager) Len() int {
-	return len(c.cacheMap)
+	return int(c.nBytes)
 }
 
 func (c *lfuCacheManager) AddToNewFreqList(lfuEntry *replacement.LfuEntry, used int) *list.Element {
@@ -106,18 +106,20 @@ func (c *lfuCacheManager) Add(key string, value replacement.Value) {
 	}
 }
 
-func (c *lfuCacheManager) GetAll() {
-	fmt.Println("MaxBytes: ", c.maxBytes, ";nowUsedBytes: ", c.nBytes, ";minFreq: ", c.minFreq)
-	fmt.Printf("{\n")
-	for i, list := range c.freqMap {
-		fmt.Printf("%d: [", i)
+func (c *lfuCacheManager) GetAll() [][]byte {
+	res := make([][]byte, 0)
+	for _, list := range c.freqMap {
 		for j := list.Front(); j != nil; j = j.Next() {
 			kv := j.Value.(*replacement.LfuEntry)
-			fmt.Printf("key:%v,value:%v; ", kv.Key, kv.Value)
+			buffer := bytes.NewBufferString(kv.Key + ",")
+			buffer.Write(kv.Value.ToByte())
+			buffer.WriteByte('\r')
+			buffer.WriteByte('\n')
+			bytes := buffer.Bytes()
+			res = append(res, bytes)
 		}
-		fmt.Printf("]\n")
 	}
-	fmt.Printf("}\n\n")
+	return res
 }
 
 func (c *lfuCacheManager) Delete(key string) bool {

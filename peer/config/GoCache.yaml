@@ -5,17 +5,22 @@ replacement:
 #使用的淘汰策略
   policy: LFU
 
-#默认baseURL
-defaultbasePath: "/gocahe/"
 #默认虚拟节点个数
 defaultReplicas: 50
 
 #服务配置
-server:
+peer:
   #IP地址
-  IP: localhost
+  address: 127.0.0.1
   #端口
-  Port: 8001
+  port: 8081
 
-#最多节点个数
-Max-Peers: 100
+slave:
+  #IP地址
+  address: 127.0.0.1
+  #端口
+  port: 8080
+
+save:
+  seconds: 5
+  modify: 1
