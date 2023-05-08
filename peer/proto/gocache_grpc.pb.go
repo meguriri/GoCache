@@ -19,19 +19,19 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	GroupCache_Get_FullMethodName         = "/GroupCache/Get"
-	GroupCache_Set_FullMethodName         = "/GroupCache/Set"
-	GroupCache_Del_FullMethodName         = "/GroupCache/Del"
-	GroupCache_Connect_FullMethodName     = "/GroupCache/Connect"
-	GroupCache_Kill_FullMethodName        = "/GroupCache/Kill"
-	GroupCache_GetAllCache_FullMethodName = "/GroupCache/GetAllCache"
-	GroupCache_Info_FullMethodName        = "/GroupCache/Info"
+	GoCache_Get_FullMethodName         = "/GoCache/Get"
+	GoCache_Set_FullMethodName         = "/GoCache/Set"
+	GoCache_Del_FullMethodName         = "/GoCache/Del"
+	GoCache_Connect_FullMethodName     = "/GoCache/Connect"
+	GoCache_Kill_FullMethodName        = "/GoCache/Kill"
+	GoCache_GetAllCache_FullMethodName = "/GoCache/GetAllCache"
+	GoCache_Info_FullMethodName        = "/GoCache/Info"
 )
 
-// GroupCacheClient is the client API for GroupCache service.
+// GoCacheClient is the client API for GoCache service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type GroupCacheClient interface {
+type GoCacheClient interface {
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*SetResponse, error)
 	Del(ctx context.Context, in *DelRequest, opts ...grpc.CallOption) (*DelResponse, error)
@@ -41,81 +41,81 @@ type GroupCacheClient interface {
 	Info(ctx context.Context, in *InfoRequest, opts ...grpc.CallOption) (*InfoResponse, error)
 }
 
-type groupCacheClient struct {
+type goCacheClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewGroupCacheClient(cc grpc.ClientConnInterface) GroupCacheClient {
-	return &groupCacheClient{cc}
+func NewGoCacheClient(cc grpc.ClientConnInterface) GoCacheClient {
+	return &goCacheClient{cc}
 }
 
-func (c *groupCacheClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
+func (c *goCacheClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
 	out := new(GetResponse)
-	err := c.cc.Invoke(ctx, GroupCache_Get_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GoCache_Get_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *groupCacheClient) Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*SetResponse, error) {
+func (c *goCacheClient) Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*SetResponse, error) {
 	out := new(SetResponse)
-	err := c.cc.Invoke(ctx, GroupCache_Set_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GoCache_Set_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *groupCacheClient) Del(ctx context.Context, in *DelRequest, opts ...grpc.CallOption) (*DelResponse, error) {
+func (c *goCacheClient) Del(ctx context.Context, in *DelRequest, opts ...grpc.CallOption) (*DelResponse, error) {
 	out := new(DelResponse)
-	err := c.cc.Invoke(ctx, GroupCache_Del_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GoCache_Del_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *groupCacheClient) Connect(ctx context.Context, in *ConnectRequest, opts ...grpc.CallOption) (*ConnectResponse, error) {
+func (c *goCacheClient) Connect(ctx context.Context, in *ConnectRequest, opts ...grpc.CallOption) (*ConnectResponse, error) {
 	out := new(ConnectResponse)
-	err := c.cc.Invoke(ctx, GroupCache_Connect_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GoCache_Connect_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *groupCacheClient) Kill(ctx context.Context, in *KillRequest, opts ...grpc.CallOption) (*KillResponse, error) {
+func (c *goCacheClient) Kill(ctx context.Context, in *KillRequest, opts ...grpc.CallOption) (*KillResponse, error) {
 	out := new(KillResponse)
-	err := c.cc.Invoke(ctx, GroupCache_Kill_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GoCache_Kill_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *groupCacheClient) GetAllCache(ctx context.Context, in *GetAllCacheRequest, opts ...grpc.CallOption) (*GetAllCacheResponse, error) {
+func (c *goCacheClient) GetAllCache(ctx context.Context, in *GetAllCacheRequest, opts ...grpc.CallOption) (*GetAllCacheResponse, error) {
 	out := new(GetAllCacheResponse)
-	err := c.cc.Invoke(ctx, GroupCache_GetAllCache_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GoCache_GetAllCache_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *groupCacheClient) Info(ctx context.Context, in *InfoRequest, opts ...grpc.CallOption) (*InfoResponse, error) {
+func (c *goCacheClient) Info(ctx context.Context, in *InfoRequest, opts ...grpc.CallOption) (*InfoResponse, error) {
 	out := new(InfoResponse)
-	err := c.cc.Invoke(ctx, GroupCache_Info_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, GoCache_Info_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// GroupCacheServer is the server API for GroupCache service.
-// All implementations must embed UnimplementedGroupCacheServer
+// GoCacheServer is the server API for GoCache service.
+// All implementations must embed UnimplementedGoCacheServer
 // for forward compatibility
-type GroupCacheServer interface {
+type GoCacheServer interface {
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	Set(context.Context, *SetRequest) (*SetResponse, error)
 	Del(context.Context, *DelRequest) (*DelResponse, error)
@@ -123,207 +123,207 @@ type GroupCacheServer interface {
 	Kill(context.Context, *KillRequest) (*KillResponse, error)
 	GetAllCache(context.Context, *GetAllCacheRequest) (*GetAllCacheResponse, error)
 	Info(context.Context, *InfoRequest) (*InfoResponse, error)
-	mustEmbedUnimplementedGroupCacheServer()
+	mustEmbedUnimplementedGoCacheServer()
 }
 
-// UnimplementedGroupCacheServer must be embedded to have forward compatible implementations.
-type UnimplementedGroupCacheServer struct {
+// UnimplementedGoCacheServer must be embedded to have forward compatible implementations.
+type UnimplementedGoCacheServer struct {
 }
 
-func (UnimplementedGroupCacheServer) Get(context.Context, *GetRequest) (*GetResponse, error) {
+func (UnimplementedGoCacheServer) Get(context.Context, *GetRequest) (*GetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
 }
-func (UnimplementedGroupCacheServer) Set(context.Context, *SetRequest) (*SetResponse, error) {
+func (UnimplementedGoCacheServer) Set(context.Context, *SetRequest) (*SetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Set not implemented")
 }
-func (UnimplementedGroupCacheServer) Del(context.Context, *DelRequest) (*DelResponse, error) {
+func (UnimplementedGoCacheServer) Del(context.Context, *DelRequest) (*DelResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Del not implemented")
 }
-func (UnimplementedGroupCacheServer) Connect(context.Context, *ConnectRequest) (*ConnectResponse, error) {
+func (UnimplementedGoCacheServer) Connect(context.Context, *ConnectRequest) (*ConnectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Connect not implemented")
 }
-func (UnimplementedGroupCacheServer) Kill(context.Context, *KillRequest) (*KillResponse, error) {
+func (UnimplementedGoCacheServer) Kill(context.Context, *KillRequest) (*KillResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Kill not implemented")
 }
-func (UnimplementedGroupCacheServer) GetAllCache(context.Context, *GetAllCacheRequest) (*GetAllCacheResponse, error) {
+func (UnimplementedGoCacheServer) GetAllCache(context.Context, *GetAllCacheRequest) (*GetAllCacheResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllCache not implemented")
 }
-func (UnimplementedGroupCacheServer) Info(context.Context, *InfoRequest) (*InfoResponse, error) {
+func (UnimplementedGoCacheServer) Info(context.Context, *InfoRequest) (*InfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Info not implemented")
 }
-func (UnimplementedGroupCacheServer) mustEmbedUnimplementedGroupCacheServer() {}
+func (UnimplementedGoCacheServer) mustEmbedUnimplementedGoCacheServer() {}
 
-// UnsafeGroupCacheServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to GroupCacheServer will
+// UnsafeGoCacheServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to GoCacheServer will
 // result in compilation errors.
-type UnsafeGroupCacheServer interface {
-	mustEmbedUnimplementedGroupCacheServer()
+type UnsafeGoCacheServer interface {
+	mustEmbedUnimplementedGoCacheServer()
 }
 
-func RegisterGroupCacheServer(s grpc.ServiceRegistrar, srv GroupCacheServer) {
-	s.RegisterService(&GroupCache_ServiceDesc, srv)
+func RegisterGoCacheServer(s grpc.ServiceRegistrar, srv GoCacheServer) {
+	s.RegisterService(&GoCache_ServiceDesc, srv)
 }
 
-func _GroupCache_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GoCache_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GroupCacheServer).Get(ctx, in)
+		return srv.(GoCacheServer).Get(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: GroupCache_Get_FullMethodName,
+		FullMethod: GoCache_Get_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GroupCacheServer).Get(ctx, req.(*GetRequest))
+		return srv.(GoCacheServer).Get(ctx, req.(*GetRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GroupCache_Set_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GoCache_Set_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SetRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GroupCacheServer).Set(ctx, in)
+		return srv.(GoCacheServer).Set(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: GroupCache_Set_FullMethodName,
+		FullMethod: GoCache_Set_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GroupCacheServer).Set(ctx, req.(*SetRequest))
+		return srv.(GoCacheServer).Set(ctx, req.(*SetRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GroupCache_Del_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GoCache_Del_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DelRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GroupCacheServer).Del(ctx, in)
+		return srv.(GoCacheServer).Del(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: GroupCache_Del_FullMethodName,
+		FullMethod: GoCache_Del_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GroupCacheServer).Del(ctx, req.(*DelRequest))
+		return srv.(GoCacheServer).Del(ctx, req.(*DelRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GroupCache_Connect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GoCache_Connect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ConnectRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GroupCacheServer).Connect(ctx, in)
+		return srv.(GoCacheServer).Connect(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: GroupCache_Connect_FullMethodName,
+		FullMethod: GoCache_Connect_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GroupCacheServer).Connect(ctx, req.(*ConnectRequest))
+		return srv.(GoCacheServer).Connect(ctx, req.(*ConnectRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GroupCache_Kill_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GoCache_Kill_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(KillRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GroupCacheServer).Kill(ctx, in)
+		return srv.(GoCacheServer).Kill(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: GroupCache_Kill_FullMethodName,
+		FullMethod: GoCache_Kill_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GroupCacheServer).Kill(ctx, req.(*KillRequest))
+		return srv.(GoCacheServer).Kill(ctx, req.(*KillRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GroupCache_GetAllCache_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GoCache_GetAllCache_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetAllCacheRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GroupCacheServer).GetAllCache(ctx, in)
+		return srv.(GoCacheServer).GetAllCache(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: GroupCache_GetAllCache_FullMethodName,
+		FullMethod: GoCache_GetAllCache_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GroupCacheServer).GetAllCache(ctx, req.(*GetAllCacheRequest))
+		return srv.(GoCacheServer).GetAllCache(ctx, req.(*GetAllCacheRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GroupCache_Info_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GoCache_Info_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(InfoRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GroupCacheServer).Info(ctx, in)
+		return srv.(GoCacheServer).Info(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: GroupCache_Info_FullMethodName,
+		FullMethod: GoCache_Info_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GroupCacheServer).Info(ctx, req.(*InfoRequest))
+		return srv.(GoCacheServer).Info(ctx, req.(*InfoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// GroupCache_ServiceDesc is the grpc.ServiceDesc for GroupCache service.
+// GoCache_ServiceDesc is the grpc.ServiceDesc for GoCache service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var GroupCache_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "GroupCache",
-	HandlerType: (*GroupCacheServer)(nil),
+var GoCache_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "GoCache",
+	HandlerType: (*GoCacheServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Get",
-			Handler:    _GroupCache_Get_Handler,
+			Handler:    _GoCache_Get_Handler,
 		},
 		{
 			MethodName: "Set",
-			Handler:    _GroupCache_Set_Handler,
+			Handler:    _GoCache_Set_Handler,
 		},
 		{
 			MethodName: "Del",
-			Handler:    _GroupCache_Del_Handler,
+			Handler:    _GoCache_Del_Handler,
 		},
 		{
 			MethodName: "Connect",
-			Handler:    _GroupCache_Connect_Handler,
+			Handler:    _GoCache_Connect_Handler,
 		},
 		{
 			MethodName: "Kill",
-			Handler:    _GroupCache_Kill_Handler,
+			Handler:    _GoCache_Kill_Handler,
 		},
 		{
 			MethodName: "GetAllCache",
-			Handler:    _GroupCache_GetAllCache_Handler,
+			Handler:    _GoCache_GetAllCache_Handler,
 		},
 		{
 			MethodName: "Info",
-			Handler:    _GroupCache_Info_Handler,
+			Handler:    _GoCache_Info_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

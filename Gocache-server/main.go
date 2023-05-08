@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -23,7 +24,10 @@ func main() {
 	}
 
 	manager := manager.NewManager(callback.CallBackFunc(cb))
-	//manager.Connect("peer1", "127.0.0.1:8081", 1024*1024)
+	manager.Connect("peer1", "127.0.0.1:8081", 1024*1024)
+	//manager.Connect("peer2", "127.0.0.1:8083", 1024*1024)
 
-	manager.Serve()
+	manager.Connect("peer3", "172.24.15.163:8086", 1024*1024)
+	go manager.HeartBeat(context.Background())
+	manager.TCPServe()
 }

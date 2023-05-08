@@ -7,6 +7,7 @@
   <script src="https://s3.pstatp.com/cdn/expire-1-M/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://cdn.staticfile.org/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
   <script src="../static/js/bootstrap.bundle.min.js"></script>
+  <script src="../static/js/index.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
   
 </head>
@@ -36,7 +37,7 @@
           <nav class="navbar ps-3">
             <ul class="navbar-nav" >
               <li class="nav-item mb-2 mt-5">
-                <a class="nav-link" href="/connect" style="font-size: 25px;color: rgb(99, 99, 99);">
+                <a class="nav-link" href="/" style="font-size: 25px;color: rgb(20, 175, 199);">
                   <i class="bi bi-caret-right-fill mx-2"></i>
                   <span class="menu-title"><b>connect server</b></span>
                 </a>
@@ -64,15 +65,108 @@
         </div>
 
         <div class="col-10 my-5">
-          <div class="container p-0 shadow ">
+          <div id="disconnected">
+            <div  class="row mt-2 ms-2 me-2 mb-5">
+              <div class="col-9">
+                <h4 class="display-6"><b>Connect to a GoCache Server</b></h4>
+                <small class="text-secondary">To use the GoCache console, you need to connect to a GoCache server and enter the server IP andPort.&nbsp;<a href="https://github.com/meguriri/GoCache">support</a> </small>
+              </div>
+              <div class="col-3 ">
+                <button id="connectBtn" class="border-0 mt-3 me-4 float-end btn-lg btn-primary"><b>Connect&nbsp; <i class="bi bi-plus-circle"></i></b></button>
+              </div>
+            </div>
+            <div class="container mt-5">
+              <form class="col-8 offset-2">
+                <div class="my-5">
+                  <h5><label for="serverIpInput" class="form-label" style="color:rgb(64, 64, 64);">GoCahce Sever IP</label></h5>
+                  <input type="text" class="form-control" id="serverIpInput" aria-describedby="IpHelp">
+                  <div id="IpHelp" class="form-text">Input Gocache Server's IP</div>
+                </div>
+                <div class="mt-4">
+                  <h5><label for="serverPortInput" class="form-label" style="color:rgb(64, 64, 64);">GoCahce Sever Port</label></h5>
+                  <input type="text" class="form-control" id="serverPortInput" aria-describedby="PortHelp">
+                  <div id="PortHelp" class="form-text">Input Gocache Server's Port</div>
+                </div>
+              </form>
+            </div>
           </div>
-          <div class="row mt-5">
+
+          <div id="connected">
+            <div  class="row mt-2 ms-2 me-2 mb-5">
+              <div class="col-9">
+                <h4 class="display-6" style="color: rgb(20, 175, 199);"><b>Successfully connected!!</b></h4>
+                <small class="text-secondary">In this page, you can see various parameters and running status of the server.&nbsp;<a href="https://github.com/meguriri/GoCache">support</a> </small>
+              </div>
+              <div class="col-3 ">
+                <button id="disconnectBtn" class="border-0 mt-3 me-4 float-end btn-lg btn-danger" style="background-color: #d53d3d;"><b>disconnect&nbsp; <i class="bi bi-x-circle"></i></b></button>
+              </div>
+            </div>
+            <div class="container mt-5">
+              
+              <div class="row border rounded-3 py-3" >
+                <div class="col-10 mt-1">
+                  <div class="row mb-2">
+                    <div class="col-12"> 
+                      <div class="progress" role="progressbar" style="height: 10px" >
+                        <div class="progress-bar" style="width: 15%; background-color:rgb(99, 99, 99);" ></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row mb-2 ">
+                    <div class="col-3 ms-2 text-secondary">
+                      270 Bytes / 2.7GB in use
+                    </div>
+                    <div class="col-2 text-start" style="color:rgb(18, 164, 187);">
+                      <h5>5 peers<h5>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-2 text-end pe-4 mt-1 " >
+                  <a href="/refresh" type="button" style="color:rgb(20, 175, 199);"><h3><i class="bi bi-arrow-clockwise"></i></h3></a>
+                </div>
+              </div>
+
+              <div class="row mt-5">
+                <div class="col-4" style="color: rgb(20, 175, 199);">
+                  <h3>IP:</h3>
+                </div>
+                <div class="col-5 "style="color: rgb(99, 99, 99);">
+                  <h3>127.0.0.1</h3>
+                </div>
+              </div>
+              <div class="row mt-5" >
+                <div class="col-4"style="color: rgb(20, 175, 199);">
+                  <h3>Port:</h3>
+                </div>
+                <div class="col-5 " style="color: rgb(99, 99, 99);">
+                  <h3>8080</h3>
+                </div>
+              </div>
+              <div class="row mt-5">
+                <div class="col-4" style="color: rgb(20, 175, 199);">
+                  <h3>Number of peers:</h3>
+                </div>
+                <div class="col-5 "style="color: rgb(99, 99, 99);">
+                  <h3>8080</h3>
+                </div>
+              </div>
+              <div class="row mt-5">
+                <div class="col-4" style="color: rgb(20, 175, 199);">
+                  <h3>Replacement strategy:</h3>
+                </div>
+                <div class="col-5 "style="color: rgb(99, 99, 99);">
+                  <h3>LFU</h3>
+                </div>
+              </div>
+            </div>
           </div>
+          
         </div>
       </div>
+
       <div class="row" style="background-color: rgb(232, 232, 232);;">
-        <div class="col-2 text-center text-white" style="background-color: #19a262;">
-          <b>connected</b>
+        <div id="connectLabel" class="col-2 text-center text-white" style="background-color: #d53d3d;">
+          <b>disconnect</b>
         </div>
         <div class="col-9" style="color: rgb(93, 93, 93);">
           <small>RAM &nbsp;:</small>

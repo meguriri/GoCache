@@ -65,7 +65,7 @@ message InfoResponse{
   int64 CacheBytes=5;
 }
 
-service GroupCache {
+service GoCache {
   rpc Get(GetRequest) returns (GetResponse);
   rpc Set(SetRequest) returns (SetResponse);
   rpc Del(DelRequest) returns (DelResponse);
