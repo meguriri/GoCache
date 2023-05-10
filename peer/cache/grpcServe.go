@@ -35,7 +35,7 @@ func Check(ctx context.Context) error {
 	return nil
 }
 
-func (c *CachePeer) Listen() {
+func (c *CachePeer) Listen(ctx context.Context) {
 	log.Println("grpc server listen on:", c.Addr)
 	lis, err := net.Listen("tcp", c.Addr)
 	if err != nil {
@@ -55,21 +55,19 @@ func (c *CachePeer) Listen() {
 	// 往grpc服务端注册反射服务
 	reflection.Register(c.Server)
 	// 启动grpc服务
-	go func() {
+	go func(ctx context.Context) {
 		for {
 			select {
-			case <-c.KillSignal:
-				{
-					fmt.Println("exit!")
-					c.Server.Stop()
-					return
-				}
+			case <-ctx.Done():
+				log.Println("listen done")
+				c.Server.Stop()
+				return
 			default:
 				{
 				}
 			}
 		}
-	}()
+	}(ctx)
 	if err := c.Server.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
@@ -84,11 +82,12 @@ func (c *CachePeer) Connect(ctx context.Context, in *pb.ConnectRequest) (*pb.Con
 	c.Lock.Lock()
 	defer c.Lock.Unlock()
 	if in.Address != c.Addr {
-		return &pb.ConnectResponse{Code: 404}, fmt.Errorf("[Invalid request]server address is not %s", in.Address)
+		return &pb.ConnectResponse{Code: 404, Entry: nil}, fmt.Errorf("[Invalid request]server address is not %s", in.Address)
 	}
 	log.Println("[connect] success!")
 	c.Name, c.CacheBytes = in.Name, in.MaxBytes
-	return &pb.ConnectResponse{Code: 200}, nil
+	res := c.ReadLocalStorage()
+	return &pb.ConnectResponse{Code: 200, Entry: res}, nil
 }
 
 func (c *CachePeer) Get(ctx context.Context, in *pb.GetRequest) (out *pb.GetResponse, err error) {
@@ -136,6 +135,7 @@ func (c *CachePeer) Set(ctx context.Context, in *pb.SetRequest) (out *pb.SetResp
 	defer c.Lock.Unlock()
 	key, value := in.Key, in.Value
 	c.Manager.Add(key, ByteView(value))
+	log.Printf("[CachePeers Set] key: %s value: %s\n", key, string(value))
 	c.ModifyCnt++
 	return &pb.SetResponse{Status: true}, nil
 }
@@ -166,11 +166,11 @@ func (c *CachePeer) Kill(ctx context.Context, in *pb.KillRequest) (*pb.KillRespo
 	c.Lock.Lock()
 	defer c.Lock.Unlock()
 	log.Println("kill reaseon: ", string(in.Reason))
+	entry := c.Manager.GetAll()
 	c.ticker.Stop()
-	fmt.Println("stop ok")
+	c.Snapshot(nil)
 	c.KillSignal <- struct{}{}
-	fmt.Println("killsignal send ok")
-	return &pb.KillResponse{Status: true}, nil
+	return &pb.KillResponse{Status: true, Entry: entry}, nil
 }
 
 func (c *CachePeer) GetAllCache(ctx context.Context, in *pb.GetAllCacheRequest) (*pb.GetAllCacheResponse, error) {

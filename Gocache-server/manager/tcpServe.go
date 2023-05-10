@@ -7,23 +7,23 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 )
 
-func (m *Manager) TCPServe() {
+func (m *Manager) TCPServe(ctx context.Context, wg *sync.WaitGroup) {
 	listen, err := net.Listen("tcp", m.addr)
 	if err != nil {
 		log.Printf("listen err=%v\n", err)
 		return
 	}
+	log.Println("listen on ", m.addr)
 	for {
-		log.Println("listen on ", m.addr)
 		conn, err := listen.Accept()
 		if err != nil {
 			log.Printf("Accept() err=%v\n", err)
 		} else {
 			log.Printf("client ip=%v\n", conn.RemoteAddr().String())
 		}
-		ctx := context.Background()
 		go m.TCPhandler(ctx, conn)
 	}
 }

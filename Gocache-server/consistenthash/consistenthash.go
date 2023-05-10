@@ -50,6 +50,11 @@ func (m *Map) Add(peers ...string) {
 	sort.Ints(m.keys)
 }
 
+func (m *Map) Refresh() {
+	m.hashMap = make(map[int]string)
+	m.keys = make([]int, 0)
+}
+
 // 从一致性哈希环上获取节点值
 func (m *Map) Get(key string) string {
 

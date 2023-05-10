@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/meguriri/GoCache/server/cache"
 	pb "github.com/meguriri/GoCache/server/proto"
@@ -56,13 +55,17 @@ func (m *Manager) Connect(name, addr string, cacheBytes int64) bool {
 		return false
 	}
 
-	// 打印服务的返回的消息
-	log.Printf("Greeting: %d", r.Code)
-
 	//生成的新group存入groups映射表
 	if r.Code == 200 {
+		// 打印服务的返回的消息
+		log.Printf("Greeting: %d", r.Code)
+		//添加到一致性哈希中
 		m.hash.Add(addr)
+		//添加到节点映射表中
 		m.cachePeers[addr] = conn
+		//重新分配缓存
+		entry := r.Entry
+		m.Snapshot(entry)
 	} else {
 		log.Printf("grpc connect err code: %d", r.Code)
 		return false
@@ -109,6 +112,7 @@ func (m *Manager) Get(ctx context.Context, key string) ([]byte, error) {
 func (m *Manager) Set(ctx context.Context, key string, value []byte) bool {
 	if len(m.cachePeers) == 0 {
 		m.localCache.Add(key, cache.ByteView(value))
+		m.ModifyCnt++
 		return true
 	}
 
@@ -135,6 +139,9 @@ func (m *Manager) Set(ctx context.Context, key string, value []byte) bool {
 func (m *Manager) Del(ctx context.Context, key string) bool {
 	if len(m.cachePeers) == 0 {
 		ok := m.localCache.Delete(key)
+		if ok {
+			m.ModifyCnt++
+		}
 		return ok
 	}
 
@@ -161,6 +168,9 @@ func (m *Manager) Del(ctx context.Context, key string) bool {
 func (m *Manager) Kill(ctx context.Context, addr string) (bool, error) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
+	if len(m.cachePeers) == 1 {
+		return false, fmt.Errorf("there is only one peer,kill false")
+	}
 	conn, ok := m.cachePeers[addr]
 	if !ok {
 		return false, fmt.Errorf("%s,that does not exist", addr)
@@ -175,7 +185,7 @@ func (m *Manager) Kill(ctx context.Context, addr string) (bool, error) {
 	log.Printf("Greeting: %v", r.Status)
 	if r.Status {
 		conn.Close()
-		delete(m.cachePeers, addr)
+		m.RefreshCache(ctx, addr, r.Entry)
 		return true, nil
 	}
 	return false, fmt.Errorf("kill error")
@@ -223,27 +233,17 @@ func (m *Manager) Info(ctx context.Context, addr string) map[string]interface{} 
 	return res
 }
 
-func (m *Manager) HeartBeat(ctx context.Context) {
-	ticker := time.NewTicker(time.Second * time.Duration(5))
-	for range ticker.C {
-		m.Check(ctx)
-	}
-	fmt.Println("heartBeat over")
-}
-
 func (m *Manager) Check(ctx context.Context) {
 	for addr, conn := range m.cachePeers {
 		client := healthpb.NewHealthClient(conn)
-
 		// 调用Get接口，发送一条消息
 		r, err := client.Check(ctx, &healthpb.HealthCheckRequest{Service: HEALTHCHECK_SERVICE})
 		if err != nil {
-
 			log.Printf("Service %s is dead", addr)
-			// m.lock.Lock()
-			// conn.Close()
-			// delete(m.cachePeers, addr)
-			// m.lock.Unlock()
+			m.lock.Lock()
+			conn.Close()
+			delete(m.cachePeers, addr)
+			m.lock.Unlock()
 			continue
 		}
 		// 打印服务的返回的消息

@@ -16,3 +16,16 @@ server:
   port: 8080
   #最多节点个数
   Max-Peers: 100
+
+save:
+  seconds: 5
+  modify: 1
+
+peers:
+  - name: peer1
+    address: 127.0.0.1:8081
+    cache_bytes: 1024
+
+  - name: peer2
+    address: 127.0.0.1:8082
+    cache_bytes: 1024

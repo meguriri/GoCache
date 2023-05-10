@@ -36,6 +36,7 @@ message ConnectRequest {
 
 message ConnectResponse {
   int32 code=1;
+  repeated bytes entry=2;
 }
 
 message KillRequest{
@@ -44,6 +45,7 @@ message KillRequest{
 
 message KillResponse{
   bool status=1;
+  repeated bytes entry=2;
 }
 
 message GetAllCacheRequest{

@@ -1,9 +1,8 @@
 package cache
 
 import (
-	"bytes"
+	"context"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"strings"
@@ -66,22 +65,27 @@ func (c *CachePeer) storage(key string) (ByteView, error) {
 	return ByteView(value), nil
 }
 
-func (c *CachePeer) Save() {
+func (c *CachePeer) Save(ctx context.Context) {
 	c.ticker = time.NewTicker(time.Second * time.Duration(SaveSeconds))
-	for range c.ticker.C {
-		if c.ModifyCnt >= SaveModify {
-			c.ModifyCnt = 0
-			c.Snapshot()
+	for {
+		select {
+		case <-c.ticker.C:
+			if c.ModifyCnt >= SaveModify {
+				c.ModifyCnt = 0
+				res := c.Manager.GetAll()
+				c.Snapshot(res)
+			}
+		case <-ctx.Done():
+			log.Println("save done")
+			return
 		}
 	}
-	fmt.Println("save over")
 }
 
-func (c *CachePeer) Snapshot() {
-	res := c.Manager.GetAll()
+func (c *CachePeer) Snapshot(res [][]byte) {
 	file, err := os.Create("save.gdb")
 	if err != nil {
-		fmt.Println("文件创建失败 ", err.Error())
+		log.Println("文件创建失败 ", err.Error())
 		return
 	}
 	defer file.Close()
@@ -91,16 +95,17 @@ func (c *CachePeer) Snapshot() {
 	}
 }
 
-func (c *CachePeer) ReadLocalStorage() {
-	file, _ := os.Open("save.gdb")
-	buf := bytes.NewBuffer([]byte{})
-	buf.ReadFrom(file)
-	bytes, _ := io.ReadAll(buf)
+func (c *CachePeer) ReadLocalStorage() [][]byte {
+	bytes, err := os.ReadFile("save.gdb")
+	if err != nil {
+		log.Println("[ReadLocalStorage] read file err", err.Error())
+	}
+	res := make([][]byte, 0)
 	l := strings.Split(string(bytes), "\r\n")
 	for _, v := range l {
 		if v != "" {
-			entry := strings.Split(v, ",")
-			c.Manager.Add(entry[0], ByteView(entry[1]))
+			res = append(res, []byte(v))
 		}
 	}
+	return res
 }

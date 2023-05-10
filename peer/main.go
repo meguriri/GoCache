@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/meguriri/GoCache/peer/cache"
 	"github.com/meguriri/GoCache/peer/callback"
@@ -21,7 +23,17 @@ func main() {
 		return
 	}
 	peer := cache.NewPeer(callback.CallBackFunc(cb))
-	peer.ReadLocalStorage()
-	go peer.Save()
-	peer.Listen()
+	// peer.ReadLocalStorage()
+	ctx, cancel := context.WithCancel(context.Background())
+	go peer.Save(ctx)
+	go peer.Listen(ctx)
+	for {
+		select {
+		case <-peer.KillSignal:
+			cancel()
+			time.Sleep(time.Second * 3)
+			log.Println("cache is stop:", time.Now())
+			return
+		}
+	}
 }
