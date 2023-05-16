@@ -1,4 +1,4 @@
-package tcp
+package cmd
 
 import (
 	"bufio"
@@ -21,7 +21,7 @@ func CMD(conn net.Conn) {
 			fmt.Println(conn.RemoteAddr().String(), "is disconnected")
 			return
 		}
-		if string(req) == "exit" {
+		if string(req) == "exit" { //退出
 			fmt.Println(string(res))
 			break
 		} else if strings.HasPrefix(string(req), "getall") {
@@ -62,14 +62,4 @@ func CMD(conn net.Conn) {
 			fmt.Println(string(res))
 		}
 	}
-}
-
-func Dial(address string) net.Conn {
-	conn, err := net.Dial("tcp", address)
-	if err != nil {
-		fmt.Println("client dial err=", err)
-		return nil
-	}
-	fmt.Println("connect success", conn)
-	return conn
 }

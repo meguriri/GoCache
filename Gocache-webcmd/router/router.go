@@ -11,13 +11,13 @@ func InitRouter() *gin.Engine {
 	r.LoadHTMLGlob("templates/*")
 
 	r.GET("/", h.GetConnectHTML())
+	connect := r.Group("/connect")
+	{
+		conn
+	}
 	cache := r.Group("/caches")
 	{
 		cache.GET("/", h.GetCacheHTML())
-	}
-	console := r.Group("/console")
-	{
-		console.GET("/", h.GetConsoleHTML())
 	}
 	peer := r.Group("/peers")
 	{

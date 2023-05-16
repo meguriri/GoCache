@@ -173,7 +173,7 @@ func (m *Manager) Kill(ctx context.Context, addr string) (bool, error) {
 	}
 	conn, ok := m.cachePeers[addr]
 	if !ok {
-		return false, fmt.Errorf("%s,that does not exist", addr)
+		return false, fmt.Errorf("%s ,that does not exist", addr)
 	}
 	client := pb.NewGoCacheClient(conn)
 	r, err := client.Kill(ctx, &pb.KillRequest{Reason: []byte("kill peer")})
