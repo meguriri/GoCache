@@ -55,6 +55,24 @@ func (m *Map) Refresh() {
 	m.keys = make([]int, 0)
 }
 
+func (m *Map) GetOldPeer(key string) string {
+	//验证key合法性
+	if len(m.keys) == 0 {
+		return ""
+	}
+
+	//获取key的哈希值
+	hash := int(m.hash([]byte(key)))
+
+	//寻找第一个大于等于的节点的序号
+	idx := sort.Search(len(m.keys), func(i int) bool {
+		return m.keys[i] >= hash
+	})
+
+	//得到哈希值后从映射中返回节点值，当idx==len(m.keys)时，取余处理从m.keys[0]中获得哈希值
+	return m.hashMap[m.keys[(idx+1)%len(m.keys)]]
+}
+
 // 从一致性哈希环上获取节点值
 func (m *Map) Get(key string) string {
 

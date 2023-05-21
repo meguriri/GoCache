@@ -36,7 +36,7 @@ func Check(ctx context.Context) error {
 }
 
 func (c *CachePeer) Listen(ctx context.Context) {
-	log.Println("grpc server listen on:", c.Addr)
+	log.Println("[Listen] grpc server listen on:", c.Addr)
 	lis, err := net.Listen("tcp", c.Addr)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -59,7 +59,7 @@ func (c *CachePeer) Listen(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Println("listen done")
+				log.Println("[listen] done")
 				c.Server.Stop()
 				return
 			default:
@@ -69,7 +69,7 @@ func (c *CachePeer) Listen(ctx context.Context) {
 		}
 	}(ctx)
 	if err := c.Server.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		log.Fatalf("[listen] failed to serve: %v", err)
 	}
 }
 
@@ -84,7 +84,7 @@ func (c *CachePeer) Connect(ctx context.Context, in *pb.ConnectRequest) (*pb.Con
 	if in.Address != c.Addr {
 		return &pb.ConnectResponse{Code: 404, Entry: nil}, fmt.Errorf("[Invalid request]server address is not %s", in.Address)
 	}
-	log.Println("[connect] success!")
+	log.Println("[CachePeer Connect]", in.Address, "success!")
 	c.Name, c.CacheBytes = in.Name, in.MaxBytes
 	res := c.ReadLocalStorage()
 	return &pb.ConnectResponse{Code: 200, Entry: res}, nil
@@ -108,21 +108,16 @@ func (c *CachePeer) Get(ctx context.Context, in *pb.GetRequest) (out *pb.GetResp
 
 	//cache未绑定底层缓存区
 	if c.Manager == nil {
-		return out, fmt.Errorf("[CachePeers Get] %s 未绑定底层缓存区", c.Addr)
+		return out, fmt.Errorf("[CachePeer Get] %s no local cache area", c.Addr)
 	}
 
 	//从底层缓存区获取缓存值
 	if v, ok := c.Manager.Get(key); ok {
-		log.Println("[Cache] hit")
+		log.Printf("[CachePeer Get] hit key: %s value: %s\n", key, string(v.(ByteView).ToByte()))
 		return &pb.GetResponse{Value: v.(ByteView).ToByte()}, nil
-	} else if c.CallBackFunc != nil {
-		view, err := c.storage(key)
-		if err != nil {
-			return out, err
-		}
-		return &pb.GetResponse{Value: view.ToByte()}, nil
 	}
-	return out, fmt.Errorf("[CachePeers Get] %s 缓存未命中", c.Addr)
+	log.Println("[CachePeer Get] Cache Miss", key)
+	return out, fmt.Errorf("[CachePeer Get] %s Cache Miss", c.Addr)
 }
 
 func (c *CachePeer) Set(ctx context.Context, in *pb.SetRequest) (out *pb.SetResponse, err error) {
@@ -135,7 +130,7 @@ func (c *CachePeer) Set(ctx context.Context, in *pb.SetRequest) (out *pb.SetResp
 	defer c.Lock.Unlock()
 	key, value := in.Key, in.Value
 	c.Manager.Add(key, ByteView(value))
-	log.Printf("[CachePeers Set] key: %s value: %s\n", key, string(value))
+	log.Printf("[CachePeer Set] key: %s value: %s\n", key, string(value))
 	c.ModifyCnt++
 	return &pb.SetResponse{Status: true}, nil
 }
@@ -152,6 +147,7 @@ func (c *CachePeer) Del(ctx context.Context, in *pb.DelRequest) (out *pb.DelResp
 	ok := c.Manager.Delete(key)
 	if ok {
 		c.ModifyCnt++
+		log.Printf("[CachePeer Del] key: %s\n", key)
 		return &pb.DelResponse{Status: ok}, nil
 	}
 	return &pb.DelResponse{Status: ok}, fmt.Errorf("del error")
@@ -165,7 +161,7 @@ func (c *CachePeer) Kill(ctx context.Context, in *pb.KillRequest) (*pb.KillRespo
 
 	c.Lock.Lock()
 	defer c.Lock.Unlock()
-	log.Println("kill reaseon: ", string(in.Reason))
+	log.Println("[CachePeer kill] reaseon: ", string(in.Reason))
 	entry := c.Manager.GetAll()
 	c.ticker.Stop()
 	c.Snapshot(nil)
@@ -178,7 +174,6 @@ func (c *CachePeer) GetAllCache(ctx context.Context, in *pb.GetAllCacheRequest) 
 	if err := Check(ctx); err != nil {
 		return nil, err
 	}
-
 	c.Lock.RLock()
 	defer c.Lock.RUnlock()
 	res := c.Manager.GetAll()
@@ -190,7 +185,6 @@ func (c *CachePeer) Info(ctx context.Context, in *pb.InfoRequest) (*pb.InfoRespo
 	if err := Check(ctx); err != nil {
 		return nil, err
 	}
-
 	c.Lock.RLock()
 	defer c.Lock.RUnlock()
 	return &pb.InfoResponse{

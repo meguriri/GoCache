@@ -2,6 +2,7 @@ package client
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -27,7 +28,7 @@ func (c *Client) CMD() {
 				fmt.Println("get error", err)
 				continue
 			}
-			fmt.Println(res)
+			fmt.Println("\"" + res + "\"")
 		} else if (req[0] == "del" || req[0] == "DEL") && len(req) == 2 {
 			res, err := c.Del(req[1])
 			if err != nil {
@@ -86,6 +87,18 @@ func (c *Client) CMD() {
 			for i, v := range res {
 				fmt.Printf("%d: %s\n", i, v)
 			}
+		} else if req[0] == "server" || req[0] == "SERVER" && len(req) == 1 {
+			res, err := c.GetServerInfo()
+			if err != nil {
+				fmt.Println("peers error", err)
+				continue
+			}
+			ma := make(map[string]interface{})
+			json.Unmarshal(res, &ma)
+			fmt.Printf("ip: %s\n", ma["ip"].(string))
+			fmt.Printf("port: %s\n", ma["port"].(string))
+			fmt.Printf("peers: %d\n", int(ma["peers"].(float64)))
+			fmt.Printf("policy: %s\n", ma["policy"].(string))
 		} else {
 			fmt.Println("error input,Please input the correct oreder!")
 		}

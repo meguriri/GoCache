@@ -39,7 +39,7 @@ func (m *Manager) Connect(name, addr string, cacheBytes int64) bool {
 		),
 	)
 	if err != nil {
-		log.Printf("did not connect: %v\n", err)
+		log.Printf("[Connect] did not connect: %v\n", err)
 		return false
 	}
 
@@ -51,14 +51,14 @@ func (m *Manager) Connect(name, addr string, cacheBytes int64) bool {
 	// 调用Get接口，发送一条消息
 	r, err := client.Connect(ctx, &pb.ConnectRequest{Name: name, Address: addr, MaxBytes: cacheBytes})
 	if err != nil {
-		log.Printf("could not greet: %v\n", err)
+		log.Printf("[Connect] could not greet: %v\n", err)
 		return false
 	}
 
 	//生成的新group存入groups映射表
 	if r.Code == 200 {
 		// 打印服务的返回的消息
-		log.Printf("Greeting: %d", r.Code)
+		log.Printf("[Connect] Greeting: %d", r.Code)
 		//添加到一致性哈希中
 		m.hash.Add(addr)
 		//添加到节点映射表中
@@ -67,7 +67,7 @@ func (m *Manager) Connect(name, addr string, cacheBytes int64) bool {
 		entry := r.Entry
 		m.Snapshot(entry)
 	} else {
-		log.Printf("grpc connect err code: %d", r.Code)
+		log.Printf("[Connect] grpc connect err code: %d", r.Code)
 		return false
 	}
 	return true
@@ -77,36 +77,62 @@ func (m *Manager) Get(ctx context.Context, key string) ([]byte, error) {
 	//use local cache
 	if len(m.cachePeers) == 0 {
 		if v, ok := m.localCache.Get(key); ok {
-			log.Println("[Cache] hit")
+			log.Println("[CachePeer Get] hit")
 			return v.(cache.ByteView).ToByte(), nil
-		} else if m.callback != nil {
-			view, err := m.storage(key)
-			if err != nil {
-				return []byte{}, err
-			}
-			return view.ToByte(), nil
 		}
-		return []byte{}, fmt.Errorf("no cache")
-	}
-	//grpc
-	m.lock.RLock()
-	defer m.lock.RUnlock()
-	addr := m.hash.Get(key)
-	conn, ok := m.cachePeers[addr]
-	if !ok {
-		return []byte{}, fmt.Errorf("%s,that does not exist", addr)
-	}
-	client := pb.NewGoCacheClient(conn)
-	// 调用Get接口，发送一条消息
-	r, err := client.Get(ctx, &pb.GetRequest{Key: key})
-	if err != nil {
-		log.Printf("could not greet: %v\n", err)
-		return []byte{}, err
+		return nil, fmt.Errorf("no cache")
 	}
 
+	//grpc
+	m.lock.RLock()
+	addr := m.hash.Get(key)
+	conn, ok := m.cachePeers[addr]
+	m.lock.RUnlock()
+	if !ok {
+		return nil, fmt.Errorf("%s,that does not exist", addr)
+	}
+	client := pb.NewGoCacheClient(conn)
+
+	// 调用Get接口，发送一条消息
+	r, err := client.Get(ctx, &pb.GetRequest{Key: key})
+
+	if err != nil {
+
+		m.lock.RLock()
+		oldAddr := m.hash.GetOldPeer(key)
+		oldconn, ok := m.cachePeers[oldAddr]
+		m.lock.RUnlock()
+		if !ok {
+			return nil, fmt.Errorf("%s,that does not exist", oldAddr)
+		}
+
+		oldClient := pb.NewGoCacheClient(oldconn)
+		// 调用Get接口，发送一条消息
+		oldR, err := oldClient.Get(ctx, &pb.GetRequest{Key: key})
+		if err != nil {
+			log.Printf("[Get] could not greet: %v\n", err)
+			return nil, err
+		}
+
+		delClient := pb.NewGoCacheClient(oldconn)
+		dr, err := delClient.Del(ctx, &pb.DelRequest{Key: key})
+		if err != nil {
+			log.Printf("[Get] del could not greet: %v\n", err)
+			return nil, err
+		}
+		log.Printf("[Get] del Greeting %v: %s\n", dr.Status, string(oldR.Value))
+
+		sr, err := client.Set(ctx, &pb.SetRequest{Key: key, Value: oldR.Value})
+		if err != nil {
+			log.Printf("[Get] set could not greet: %v\n", err)
+			return nil, err
+		}
+		log.Printf("[Get] set Greeting %v: %s\n", sr.Status, string(oldR.Value))
+		return oldR.Value, nil
+	}
 	// 打印服务的返回的消息
-	log.Printf("Greeting: %s", r.Value)
-	return r.GetValue(), nil
+	log.Printf("[Get] Greeting: %s", r.Value)
+	return r.Value, nil
 }
 
 func (m *Manager) Set(ctx context.Context, key string, value []byte) bool {
@@ -116,23 +142,38 @@ func (m *Manager) Set(ctx context.Context, key string, value []byte) bool {
 		return true
 	}
 
+	// m.lock.RLock()
+	// oldAddr := m.hash.GetOldPeer(key)
+	// oldconn, ok := m.cachePeers[oldAddr]
+	// m.lock.RUnlock()
+	// if !ok {
+	// 	return false
+	// }
+	// oldClient := pb.NewGoCacheClient(oldconn)
+	// // 调用Get接口，发送一条消息
+	// oldR, err := oldClient.Get(ctx, &pb.GetRequest{Key: key})
+	// if err == nil {
+	// 	log.Println("[Set] get old value not nil", string(oldR.Value))
+	// 	oldClient.Del(ctx, &pb.DelRequest{Key: key})
+	// }
+
 	m.lock.RLock()
-	defer m.lock.RUnlock()
 	addr := m.hash.Get(key)
 	conn, ok := m.cachePeers[addr]
+	m.lock.RUnlock()
 	if !ok {
 		return false
 	}
-	client := pb.NewGoCacheClient(conn)
 
+	client := pb.NewGoCacheClient(conn)
 	// 调用Get接口，发送一条消息
 	r, err := client.Set(ctx, &pb.SetRequest{Key: key, Value: value})
 	if err != nil {
-		log.Printf("could not greet: %v\n", err)
+		log.Printf("[set] could not greet: %v\n", err)
 		return false
 	}
 	// 打印服务的返回的消息
-	log.Printf("Greeting: %v", r.Status)
+	log.Printf("[set] Greeting: %v", r.Status)
 	return r.Status
 }
 
@@ -146,25 +187,27 @@ func (m *Manager) Del(ctx context.Context, key string) bool {
 	}
 
 	m.lock.RLock()
-	defer m.lock.RUnlock()
 	addr := m.hash.Get(key)
 	conn, ok := m.cachePeers[addr]
+	m.lock.RUnlock()
 	if !ok {
 		return false
 	}
+
 	client := pb.NewGoCacheClient(conn)
 
 	// 调用Get接口，发送一条消息
 	r, err := client.Del(ctx, &pb.DelRequest{Key: key})
 	if err != nil {
-		log.Printf("could not greet: %v\n", err)
+		log.Printf("[Del] could not greet: %v\n", err)
 		return false
 	}
 	// 打印服务的返回的消息
-	log.Printf("Greeting: %v", r.Status)
+	log.Printf("[Del] Greeting: %v", r.Status)
 	return r.Status
 }
 
+// 删除一个节点
 func (m *Manager) Kill(ctx context.Context, addr string) (bool, error) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
@@ -178,11 +221,11 @@ func (m *Manager) Kill(ctx context.Context, addr string) (bool, error) {
 	client := pb.NewGoCacheClient(conn)
 	r, err := client.Kill(ctx, &pb.KillRequest{Reason: []byte("kill peer")})
 	if err != nil {
-		log.Printf("could not greet: %v\n", err)
+		log.Printf("[Kill] could not greet: %v\n", err)
 		return false, err
 	}
 	// 打印服务的返回的消息
-	log.Printf("Greeting: %v", r.Status)
+	log.Printf("[Kill] Greeting: %v", r.Status)
 	if r.Status {
 		conn.Close()
 		m.RefreshCache(ctx, addr, r.Entry)
@@ -201,11 +244,11 @@ func (m *Manager) GetAllCache(ctx context.Context, addr string) [][]byte {
 	client := pb.NewGoCacheClient(conn)
 	r, err := client.GetAllCache(ctx, &pb.GetAllCacheRequest{})
 	if err != nil {
-		log.Printf("could not greet: %v\n", err)
+		log.Printf("[GetAllCache] could not greet: %v\n", err)
 		return nil
 	}
 	// 打印服务的返回的消息
-	log.Println("Greeting", r.Size)
+	log.Println("[GetAllCache] Greeting", r.Size)
 	return r.Entry
 }
 
@@ -219,11 +262,11 @@ func (m *Manager) Info(ctx context.Context, addr string) map[string]interface{} 
 	client := pb.NewGoCacheClient(conn)
 	r, err := client.Info(ctx, &pb.InfoRequest{})
 	if err != nil {
-		log.Printf("could not greet: %v\n", err)
+		log.Printf("[Info] could not greet: %v\n", err)
 		return nil
 	}
 	// 打印服务的返回的消息
-	log.Println("Greeting")
+	log.Println("[Info] Greeting")
 	res := make(map[string]interface{})
 	res["name"] = r.Name
 	res["address"] = r.Address
@@ -239,7 +282,7 @@ func (m *Manager) Check(ctx context.Context) {
 		// 调用Get接口，发送一条消息
 		r, err := client.Check(ctx, &healthpb.HealthCheckRequest{Service: HEALTHCHECK_SERVICE})
 		if err != nil {
-			log.Printf("Service %s is dead", addr)
+			log.Printf("[Check] Service %s is dead", addr)
 			m.lock.Lock()
 			conn.Close()
 			delete(m.cachePeers, addr)
@@ -247,6 +290,6 @@ func (m *Manager) Check(ctx context.Context) {
 			continue
 		}
 		// 打印服务的返回的消息
-		log.Printf("Service %s is %s", addr, r.Status)
+		log.Printf("[Check] Service %s is %s", addr, r.Status)
 	}
 }

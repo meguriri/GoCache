@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetSettingHTML() gin.HandlerFunc {
+func GetServerInfoHTML() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.HTML(http.StatusOK, "setting.html", nil)
+		c.HTML(http.StatusOK, "serverInfo.html", nil)
 	}
 }

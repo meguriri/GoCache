@@ -26,13 +26,7 @@ func (m *Manager) TCPServe(ctx context.Context, wg *sync.WaitGroup) {
 		} else {
 			log.Printf("client ip=%v\n", conn.RemoteAddr().String())
 		}
-		ma := make(map[string]interface{})
-		ma["ip"] = ManagerIP
-		ma["port"] = ManagerPort
-		ma["peers"] = len(m.cachePeers)
-		ma["policy"] = replacement.ReplacementPolicy
-		b, _ := json.Marshal(ma)
-		conn.Write(b)
+		conn.Write([]byte("connect success"))
 		go m.TCPhandler(ctx, conn)
 	}
 }
@@ -48,18 +42,29 @@ func (m *Manager) TCPhandler(ctx context.Context, conn net.Conn) {
 		}
 		li := strings.Split(req, " ")
 		var resp = []byte{}
-		if li[0] == "set" {
+		if li[0] == "heart" {
+			log.Println("use heart")
+			resp = []byte("OK")
+		} else if li[0] == "set" {
 			if ok := m.Set(ctx, li[1], []byte(li[2])); !ok {
 				resp = []byte("set error")
 			} else {
 				resp = []byte("OK")
 			}
+		} else if li[0] == "server" {
+			ma := make(map[string]interface{})
+			ma["ip"] = ManagerIP
+			ma["port"] = ManagerPort
+			ma["peers"] = len(m.cachePeers)
+			ma["policy"] = replacement.ReplacementPolicy
+			b, _ := json.Marshal(ma)
+			resp = b
 		} else if li[0] == "get" {
 			res, err := m.Get(ctx, li[1])
 			if err != nil {
 				resp = []byte("(nil)")
 			} else {
-				resp = []byte("\"" + string(res) + "\"")
+				resp = []byte(string(res))
 			}
 		} else if li[0] == "del" {
 			res := m.Del(ctx, li[1])
@@ -78,21 +83,26 @@ func (m *Manager) TCPhandler(ctx context.Context, conn net.Conn) {
 			if ok, err := m.Kill(ctx, li[1]); ok {
 				resp = []byte(li[1] + " is logout")
 			} else {
-				resp = []byte(li[1] + "logout err:" + err.Error())
+				resp = []byte(err.Error())
 			}
 		} else if li[0] == "connect" {
-			bytes, _ := strconv.Atoi(li[3])
-			if ok := m.Connect(li[1], li[2], int64(bytes)); ok {
+			bytes, err := strconv.Atoi(li[3])
+			if err != nil {
+				resp = []byte("connect err")
+			} else if ok := m.Connect(li[1], li[2], int64(bytes)); ok {
 				resp = []byte(li[2] + " is connected")
+				m.allocationCache(ctx)
 			} else {
-				resp = []byte(li[2] + " connect err:")
+				resp = []byte("connect err")
 			}
 		} else if li[0] == "getall" {
 			res := m.GetAllCache(ctx, li[1])
+			list := make(map[string]string)
 			for _, v := range res {
-				log.Println("res:", string(v))
+				l := strings.Split(string(v), ",")
+				list[l[0]] = l[1]
 			}
-			r, _ := json.Marshal(res)
+			r, _ := json.Marshal(list)
 			resp = r
 		} else if li[0] == "info" {
 			res := m.Info(ctx, li[1])

@@ -6,27 +6,37 @@ import (
 	"log"
 	"net"
 	"strings"
-
-	"github.com/meguriri/GoCache/client/server"
 )
 
 type Client struct {
-	Conn net.Conn
-	Res  []byte
+	Conn    net.Conn
+	Address string
+	Res     []byte
 }
 
-func (c *Client) Connect(addr string) (*server.Server, error) {
-	conn, err := net.Dial("tcp", addr)
+func (c *Client) Connect() (string, error) {
+	conn, err := net.Dial("tcp", c.Address)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	log.Println("connect success", conn)
+	log.Println("connect success", conn.RemoteAddr())
 	c.Conn = conn
 	c.Res = make([]byte, 1024*1024)
 	n, _ := conn.Read(c.Res)
-	ma := make(map[string]interface{})
-	json.Unmarshal(c.Res[:n], &ma)
-	return &server.Server{Ip: ma["ip"].(string), Port: ma["port"].(string), Peers: int(ma["peers"].(float64)), Policy: ma["policy"].(string)}, nil
+	return string(c.Res[:n]), nil
+}
+
+func (c *Client) GetServerInfo() ([]byte, error) {
+	defer c.Conn.Close()
+	_, err1 := c.Conn.Write([]byte("server"))
+	n, err2 := c.Conn.Read(c.Res)
+	if err1 != nil {
+		return nil, err1
+	}
+	if err2 != nil {
+		return nil, err2
+	}
+	return c.Res[:n], nil
 }
 
 func (c *Client) Exit() (string, error) {
@@ -99,6 +109,9 @@ func (c *Client) ConnectPeer(name, address, cacheBytes string) (string, error) {
 	if err2 != nil {
 		return "read error", err2
 	}
+	if string(c.Res[:n]) == "connect err" {
+		return "connect err", fmt.Errorf("connect err")
+	}
 	return string(c.Res[:n]), nil
 }
 
@@ -117,7 +130,6 @@ func (c *Client) GetAllCache(address string) (map[string]string, error) {
 	l := make(map[string]string)
 	s := strings.Trim(string(c.Res[:n]), "\000")
 	json.Unmarshal([]byte(s), &l)
-	log.Println(s)
 	return l, nil
 }
 
@@ -152,4 +164,19 @@ func (c *Client) GetAllPeers() ([]string, error) {
 	s := strings.Trim(string(c.Res[:n]), "\000")
 	json.Unmarshal([]byte(s), &l)
 	return l, nil
+}
+
+func (c *Client) Heart() (bool, error) {
+	_, err1 := c.Conn.Write([]byte("heart"))
+	n, err2 := c.Conn.Read(c.Res)
+	if err1 != nil {
+		return false, err1
+	}
+	if err2 != nil {
+		return false, err2
+	}
+	if string(c.Res[:n]) == "OK" {
+		return true, nil
+	}
+	return false, fmt.Errorf("connect is dead")
 }

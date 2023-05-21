@@ -11,21 +11,31 @@ func InitRouter() *gin.Engine {
 	r.LoadHTMLGlob("templates/*")
 
 	r.GET("/", h.GetConnectHTML())
-	connect := r.Group("/connect")
+	r.POST("/connect", h.Connect())
+	r.POST("/disconnect", h.CheckConnect(), h.Disconnect())
+	r.POST("/search", h.CheckConnect(), h.Search())
+	server := r.Group("/server")
 	{
-		conn
+		server.GET("/", h.GetServerInfoHTML())
+		server.GET("/refresh", h.CheckConnect(), h.UsedBytesMiddle(), h.Refresh())
+		server.GET("/info", h.CheckConnect(), h.UsedBytesMiddle(), h.Info())
 	}
+
 	cache := r.Group("/caches")
 	{
-		cache.GET("/", h.GetCacheHTML())
+		cache.GET("/", h.GetCachesHTML())
+		cache.GET("/list", h.CheckConnect(), h.CheckPeer(), h.GetCachesList())
+		cache.POST("/delete", h.CheckConnect(), h.DeleteCache())
+		cache.POST("/update", h.CheckConnect(), h.UpdateCache())
+		cache.POST("/set", h.CheckConnect(), h.SetCache())
+		cache.POST("/get", h.CheckConnect(), h.GetCache())
 	}
 	peer := r.Group("/peers")
 	{
 		peer.GET("/", h.GetPeerHTML())
-	}
-	setting := r.Group("/setting")
-	{
-		setting.GET("/", h.GetSettingHTML())
+		peer.GET("/list", h.CheckConnect(), h.GetPeerList())
+		peer.POST("/connect", h.CheckConnect(), h.ConnectNewPeer())
+		peer.POST("/delete", h.CheckConnect(), h.DeletePeer())
 	}
 	return r
 }

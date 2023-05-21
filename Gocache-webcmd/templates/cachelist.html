@@ -7,6 +7,8 @@
   <script src="https://s3.pstatp.com/cdn/expire-1-M/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://cdn.staticfile.org/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
   <script src="../static/js/bootstrap.bundle.min.js"></script>
+  <script src="../static/js/logic.js"></script>
+  <script src="../static/js/cachelist.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
   
 </head>
@@ -16,17 +18,14 @@
       <div class="mt-2 col-2 text-start text-white">
         <h4><b> Gocache Console</b></h4>
       </div>
-      <div class="col-6 offset-1 rounded-3 " style="background-color: rgb(20, 175, 199);">
+      <!-- <div class="col-6 offset-1 rounded-3 " style="background-color: rgb(20, 175, 199);">
         <div class="row">
-          <label for="mainSearch" class="col-1 col-form-label">
+          <input id="mainSearch" class="text-white border-0 col form-control" style="background-color: rgb(20, 175, 199); font-size: 20px;" type="text" placeholder="search for a remote peer by address or name">
+          <label id="search" for="mainSearch" class="col-1 col-form-label">
             <h4 class="text-start text-white"><b><i class="bi bi-search"></i></b></h4>
           </label>
-          <input id="mainSearch" class="text-white border-0 col form-control" style="background-color: rgb(20, 175, 199); font-size: 20px;" type="text" placeholder="search for a remote peer by address or name">
         </div>
-      </div>
-      <div class="mt-2 offset-1 col-2 text-end">
-        <a href="/setting" type="button"><h3><i class="bi bi-gear-fill text-white"></i></h3></a>
-      </div>
+      </div> -->
     </div>
 
     <div class="container-fluid shadow-sm ">
@@ -39,6 +38,12 @@
                 <a class="nav-link" href="/" style="font-size: 25px;color: rgb(99,99,99);">
                   <i class="bi bi-caret-right-fill mx-2"></i>
                   <span class="menu-title"><b>connect server</b></span>
+                </a>
+              </li>
+              <li class="nav-item mb-2 mt-4">
+                <a class="nav-link" href="/server" style="font-size: 25px;color: rgb(99, 99, 99);">
+                  <i class="bi bi-chat-square-text mx-2"></i>
+                  <span class="menu-title"><b>Server Info</b></span>
                 </a>
               </li>
               <li class="nav-item mb-2 mt-4">
@@ -60,9 +65,20 @@
         <div class="col-10 my-5">
           <div >
             <div  class="row mt-2 ms-2 me-2 mb-5">
-              <div class="col-9">
-                <h4 class="display-6"><b>Caches list</b></h4>
+              <div class="col-6">
+                <h4 class="display-6" id="cacheAddress"><b>Caches list</b></h4>
                 <small class="text-secondary">This page has all the cache information of the current peer, and you can view or modify the cache information. And can creat a gdb file.&nbsp;<a href="https://github.com/meguriri/GoCache">support</a> </small>
+              </div>
+              <div class="col-2 mt-5">
+                <input id="getInput" type="text" class="form-control" >
+              </div>
+              <div class="col-1 mt-5">
+                <button id="getSubmit" type="button" class="btn btn-primary border-0 "><i class="bi bi-search"></i></button>
+              </div>
+              <div class="col-3 mt-3">
+                <button id="NewCachetBtn" class="border-0 mt-3 me-4 float-end btn-lg btn-primary" data-bs-toggle="modal" data-bs-target="#cacheModal">
+                  <b>New Cache&nbsp; <i class="bi bi-plus-circle"></i></b>
+                </button>
               </div>
             </div>
           </div>
@@ -73,15 +89,15 @@
                 <h4>Address: </h4>
               </div>
               <div class="col-6">
-                <input type="text" class="form-control" >
+                <input id="addressInput" type="text" class="form-control" >
               </div>
               <div class="col-2">
-                <button type="button" class="btn btn-success"><i class="bi bi-play-fill mx-2"></i></button>
+                <div id="subBtn" type="button" class="btn btn-success"><i class="bi bi-play-fill mx-2"></i></div>
               </div>
             </div>
           </div>
           
-          <div class="row mt-5 mx-5">
+          <div class="row mt-5 mx-5 overflow-auto " style="height: 550px;">
             <table class="table ">
               <thead >
                 <tr>
@@ -90,31 +106,8 @@
                   <th scope="col"><h4>Actions</h4></th>
                 </tr>
               </thead>
-              <tbody class="text-secondary">
-                <tr>
-                  <td class="py-3"><h5><b>abc</b></h5></td>
-                  <td class="py-3"><h5><b>def</b></h5></td>
-                  <td class="py-3 ">
-                    <a href="" type="button" style="color:rgb(99, 99, 99);"><h4><i class="bi bi-arrow-clockwise me-3"></i></h4></i></a>
-                    <a href="" type="button" style="color:rgb(99, 99, 99);"><h4><i class="bi bi-trash-fill me-3"></i></h4></a>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="py-3"><h5><b>abc</b></h5></td>
-                  <td class="py-3"><h5><b>def</b></h5></td>
-                  <td class="py-3 ">
-                    <a href="" type="button" style="color:rgb(99, 99, 99);"><h4><i class="bi bi-arrow-clockwise me-3"></i></h4></i></a>
-                    <a href="" type="button" style="color:rgb(99, 99, 99);"><h4><i class="bi bi-trash-fill me-3"></i></h4></a>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="py-3"><h5><b>abc</b></h5></td>
-                  <td class="py-3"><h5><b>def</b></h5></td>
-                  <td class="py-3 ">
-                    <a href="" type="button" style="color:rgb(99, 99, 99);"><h4><i class="bi bi-arrow-clockwise me-3"></i></h4></i></a>
-                    <a href="" type="button" style="color:rgb(99, 99, 99);"><h4><i class="bi bi-trash-fill me-3"></i></h4></a>
-                  </td>
-                </tr>
+              <tbody class="text-secondary" id="cacheList">
+                
               </tbody>
             </table>
           </div>  
@@ -122,11 +115,11 @@
       </div>
 
       <div class="row" style="background-color: rgb(232, 232, 232);;">
-        <div class="col-2 text-center text-white" style="background-color: #19a262;">
-          <b>connected</b>
+        <div id="connectLabel" class="col-2 text-center text-white" style="background-color: #d53d3d;">
+          <b>disconnected</b>
         </div>
         <div class="col-9" style="color: rgb(93, 93, 93);">
-          <small>RAM &nbsp;:</small>
+          &nbsp;
         </div>
         <div class="col-1 float-end text-end" style="color: rgb(93, 93, 93);">
           <small>v1.0</small>
@@ -134,5 +127,68 @@
       </div>
     </div>
   </main>
+
+  <div class="modal" id="cacheModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+   
+        <!-- 模态框头部 -->
+        <div class="modal-header">
+          <h4 class="modal-title">New Cache</h4>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+   
+        <!-- 模态框内容 -->
+        <div class="modal-body">
+          <form class="col-8 offset-2">
+            <div>
+              <h5><label for="newKeyInput" class="form-label" style="color:rgb(64, 64, 64);">Key</label></h5>
+              <input type="text" class="form-control" id="newKeyInput">
+            </div>
+            <div class="mt-2">
+              <h5><label for="newValueInput" class="form-label" style="color:rgb(64, 64, 64);">Value</label></h5>
+              <input type="text" class="form-control" id="newValueInput">
+            </div>
+          </form>
+        </div>
+   
+        <!-- 模态框底部 -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" id="cacheSubmit">Submit</button>
+        </div>
+   
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="myModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+   
+        <!-- 模态框头部 -->
+        <div class="modal-header">
+          <h4 class="modal-title">Update Cache</h4>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+   
+        <!-- 模态框内容 -->
+        <div class="modal-body">
+          <form class="col-8 offset-2">
+            <div>
+              <h5><label for="maxBytesPortInput" class="form-label" style="color:rgb(64, 64, 64);">Value</label></h5>
+              <input type="text" class="form-control" id="valueInput">
+            </div>
+          </form>
+        </div>
+   
+        <!-- 模态框底部 -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" id="submit">Submit</button>
+        </div>
+   
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

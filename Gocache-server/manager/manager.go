@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/meguriri/GoCache/server/cache"
-	"github.com/meguriri/GoCache/server/callback"
 	"github.com/meguriri/GoCache/server/config"
 	"github.com/meguriri/GoCache/server/consistenthash"
 	"github.com/meguriri/GoCache/server/replacement"
@@ -33,33 +32,23 @@ type Manager struct {
 	cachePeers      map[string]*grpc.ClientConn //peer名与grpc conn的映射表
 	localCache      replacement.CacheManager
 	localcacheBytes int64
-	callback        callback.CallBack
 	ticker          *time.Ticker
 	ModifyCnt       int
 	hash            consistenthash.Map
 }
 
-func NewManager(callback callback.CallBack) *Manager {
+func NewManager() *Manager {
 	return &Manager{
 		addr:            ManagerIP + ":" + ManagerPort,
 		lock:            sync.RWMutex{},
 		cachePeers:      make(map[string]*grpc.ClientConn),
 		localCache:      manager.NewCache(replacement.ReplacementPolicy),
 		localcacheBytes: replacement.MaxBytes,
-		callback:        callback,
 		hash:            *consistenthash.New(DefaultReplicas, nil),
 	}
 }
 
 func StartServer() error {
-
-	cb := func(key string) ([]byte, error) {
-		if value, ok := cache.DB[key]; ok {
-			return []byte(value), nil
-		}
-		return []byte{}, fmt.Errorf("[call back] no local storage")
-	}
-
 	config, err := config.ConfigInit()
 	if err != nil {
 		return err
@@ -72,7 +61,7 @@ func StartServer() error {
 	ManagerIP = config.GetString("server.ip")
 	ManagerPort = config.GetString("server.port")
 
-	manager := NewManager(callback.CallBackFunc(cb))
+	manager := NewManager()
 	peerList := config.Get("peers").([]interface{})
 	for _, peer := range peerList {
 		manager.Connect(peer.(map[string]interface{})["name"].(string),
@@ -140,16 +129,6 @@ func (m *Manager) HeartBeat(ctx context.Context, wg *sync.WaitGroup) {
 		}
 	}
 
-}
-
-func (m *Manager) storage(key string) (cache.ByteView, error) {
-	log.Println("[Search call back] ")
-	value, err := m.callback.Get(key)
-	if err != nil {
-		return cache.ByteView{}, fmt.Errorf("[Search call back] no local storage")
-	}
-	m.localCache.Add(key, cache.ByteView(value))
-	return cache.ByteView(value), nil
 }
 
 func (m *Manager) RefreshCache(ctx context.Context, addr string, entry [][]byte) {
@@ -222,6 +201,7 @@ func (m *Manager) Init(ctx context.Context) {
 	m.allocationCache(ctx)
 }
 
+// 将save.gdb中的内容分配到不同节点当中
 func (m *Manager) allocationCache(ctx context.Context) {
 	bytes, err := os.ReadFile("save.gdb")
 	if err != nil {
@@ -235,6 +215,7 @@ func (m *Manager) allocationCache(ctx context.Context) {
 			m.Set(ctx, entry[0], cache.ByteView(entry[1]))
 		}
 	}
+	os.OpenFile("save.gdb", os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0766)
 }
 
 func (m *Manager) readLocalStorage() {

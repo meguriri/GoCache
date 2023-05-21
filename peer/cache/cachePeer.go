@@ -2,14 +2,12 @@ package cache
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/meguriri/GoCache/peer/callback"
 	pb "github.com/meguriri/GoCache/peer/proto"
 	"github.com/meguriri/GoCache/peer/replacement"
 	"github.com/meguriri/GoCache/peer/replacement/manager"
@@ -27,42 +25,26 @@ var (
 
 type CachePeer struct {
 	pb.UnimplementedGoCacheServer
-	Server       *grpc.Server
-	Name         string
-	Addr         string                   //cache的地址
-	CallBackFunc callback.CallBack        //缓存未命中的回调函数
-	Lock         sync.RWMutex             //互斥锁
-	Manager      replacement.CacheManager //cache 底层存储和淘汰算法
-	CacheBytes   int64                    //缓存字节最大值
-	KillSignal   chan struct{}
-	ticker       *time.Ticker
-	ModifyCnt    int
+	Server     *grpc.Server
+	Name       string
+	Addr       string                   //cache的地址
+	Lock       sync.RWMutex             //互斥锁
+	Manager    replacement.CacheManager //cache 底层存储和淘汰算法
+	CacheBytes int64                    //缓存字节最大值
+	KillSignal chan struct{}
+	ticker     *time.Ticker
+	ModifyCnt  int
 }
 
-func NewPeer(callback callback.CallBack) *CachePeer {
+func NewPeer() *CachePeer {
 
-	//回调函数为空
-	if callback == nil {
-		log.Println("nil callBack func")
-	}
 	return &CachePeer{
-		Addr:         PeerAddress + ":" + PeerPort,
-		CallBackFunc: callback,
-		Lock:         sync.RWMutex{},
-		Manager:      manager.NewCache(replacement.ReplacementPolicy),
-		CacheBytes:   replacement.MaxBytes,
-		KillSignal:   make(chan struct{}),
+		Addr:       PeerAddress + ":" + PeerPort,
+		Lock:       sync.RWMutex{},
+		Manager:    manager.NewCache(replacement.ReplacementPolicy),
+		CacheBytes: replacement.MaxBytes,
+		KillSignal: make(chan struct{}),
 	}
-}
-
-func (c *CachePeer) storage(key string) (ByteView, error) {
-	log.Println("[Search call back] ")
-	value, err := c.CallBackFunc.Get(key)
-	if err != nil {
-		return ByteView{}, fmt.Errorf("[Search call back] no local storage")
-	}
-	c.Manager.Add(key, ByteView(value))
-	return ByteView(value), nil
 }
 
 func (c *CachePeer) Save(ctx context.Context) {
@@ -71,9 +53,11 @@ func (c *CachePeer) Save(ctx context.Context) {
 		select {
 		case <-c.ticker.C:
 			if c.ModifyCnt >= SaveModify {
+				c.Lock.RLock()
 				c.ModifyCnt = 0
 				res := c.Manager.GetAll()
 				c.Snapshot(res)
+				c.Lock.RUnlock()
 			}
 		case <-ctx.Done():
 			log.Println("save done")
@@ -93,6 +77,7 @@ func (c *CachePeer) Snapshot(res [][]byte) {
 	for _, v := range res {
 		file.Write(v)
 	}
+	log.Println("[Snapshot] write", len(res), "caches")
 }
 
 func (c *CachePeer) ReadLocalStorage() [][]byte {
@@ -105,6 +90,7 @@ func (c *CachePeer) ReadLocalStorage() [][]byte {
 	for _, v := range l {
 		if v != "" {
 			res = append(res, []byte(v))
+			log.Println("[ReadLocalStorage] read", v)
 		}
 	}
 	return res

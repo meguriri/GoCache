@@ -9,11 +9,12 @@ import (
 
 func main() {
 	c := client.Client{}
-	server, err := c.Connect("127.0.0.1:8080")
+	c.Address = "127.0.0.1:8080"
+	res, err := c.Connect()
 	if err != nil {
 		log.Println("dial err", err.Error())
 		return
 	}
-	fmt.Println(*server)
+	fmt.Println(res)
 	c.CMD()
 }

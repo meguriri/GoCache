@@ -1,9 +1,2 @@
-nmd,woc
-ert,tyu
-234,fer
-yz,dsm
-fuck,err
-124,euyrekvsa
-abc,wcnm
+7665,woc
 123,abc
-woc,123
